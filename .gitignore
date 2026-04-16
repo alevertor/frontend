@@ -1,0 +1,28 @@
+# Variables de entorno
+.env
+
+# Dependencias / build
+node_modules/
+dist/
+build/
+
+# Archivos de sistema / editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Mantener carpetas de imágenes y fuentes aunque estén vacías
+assets/img/branding/*
+assets/img/products/*
+assets/img/brands/*
+assets/img/icons/*
+assets/img/placeholders/*
+assets/fonts/*
+
+!assets/img/branding/.gitkeep
+!assets/img/products/.gitkeep
+!assets/img/brands/.gitkeep
+!assets/img/icons/.gitkeep
+!assets/img/placeholders/.gitkeep
+!assets/fonts/.gitkeep
