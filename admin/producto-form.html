@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Producto | Solo Culatas Admin</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="./css/admin.css">
+</head>
+
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="./dashboard.html">
+        Solo Culatas
+      </a>
+
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#menuAdmin"
+        aria-controls="menuAdmin"
+        aria-expanded="false"
+        aria-label="Abrir menú"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="menuAdmin">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="./dashboard.html">Dashboard</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="./inventario.html">Inventario</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link active" href="./productos.html">Productos</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="./ventas.html">Ventas</a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link" href="./usuarios.html">Usuarios</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="./categorias.html">Categorías</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="./marcas.html">Marcas Vehículos</a>
+          </li>
+        </ul>
+
+        <button id="btnCerrarSesion" class="btn btn-outline-light btn-sm" type="button">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-fluid py-4">
+    <div class="mb-3">
+      <a href="./productos.html" class="text-decoration-none small">
+        ← Volver a productos
+      </a>
+    </div>
+
+    <section class="producto-admin-grid mb-4">
+      <article class="card producto-base-card">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-3">
+            <div>
+              <h1 class="h5 mb-1">Producto base</h1>
+              <p class="text-muted small mb-0">
+                Datos técnicos que no cambian entre variantes u ofertas.
+              </p>
+            </div>
+
+            <button id="btnEditarProducto" class="btn btn-outline-primary btn-sm" type="button">
+              Editar producto
+            </button>
+          </div>
+
+          <div class="mb-3">
+            <div class="producto-dato-label">Nombre</div>
+            <div id="vistaNombreProducto" class="producto-base-titulo">
+              —
+            </div>
+          </div>
+
+          <div class="producto-meta-grid">
+            <div>
+              <div class="producto-dato-label">Categoría</div>
+              <div id="vistaCategoria" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">Marca(s) / aplicación</div>
+              <div id="vistaMarca" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">Tipo</div>
+              <div id="vistaTipoRepuesto" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">Estado</div>
+              <div>
+                <span id="vistaEstadoProducto" class="badge text-bg-light border">—</span>
+                <span id="vistaPublicacionProducto" class="badge text-bg-light border">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="producto-linea"></div>
+
+          <div class="mb-3">
+            <div class="producto-dato-label">OEM / referencia original</div>
+            <div id="vistaReferenciaOriginal" class="producto-dato-valor">
+              —
+            </div>
+          </div>
+
+          <div class="producto-tecnico-grid">
+            <div>
+              <div class="producto-dato-label">Motor(es)</div>
+              <div id="vistaMotor" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">Cilindraje(s)</div>
+              <div id="vistaCilindraje" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">Combustible</div>
+              <div id="vistaCombustible" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">N. Cilindros</div>
+              <div id="vistaCilindros" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">N. Válvulas</div>
+              <div id="vistaValvulas" class="producto-dato-valor">—</div>
+            </div>
+
+            <div>
+              <div class="producto-dato-label">Material</div>
+              <div id="vistaMaterial" class="producto-dato-valor">—</div>
+            </div>
+          </div>
+
+          <div class="producto-linea"></div>
+
+          <div class="mb-3">
+            <div class="producto-dato-label">Vehículos compatibles</div>
+            <div id="vistaVehiculosCompatibles" class="producto-dato-valor producto-bloque-texto">
+              —
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="producto-dato-label">Años compatibles</div>
+            <div id="vistaAnosCompatibles" class="producto-dato-valor producto-bloque-texto">
+              —
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="producto-dato-label">Observaciones técnicas</div>
+            <div id="vistaObservacionesTecnicas" class="producto-dato-valor producto-bloque-texto">
+              —
+            </div>
+          </div>
+
+          <div>
+            <div class="producto-dato-label">Garantía</div>
+            <div id="vistaGarantiaTiempo" class="producto-dato-valor producto-bloque-texto">
+              —
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+            <div>
+              <h2 class="h5 mb-1">Configuraciones</h2>
+              <p class="text-muted small mb-0">
+                Diferencias técnicas: inyector, medida, versión, presentación, etc.
+              </p>
+            </div>
+
+            <button id="btnNuevaConfiguracion" class="btn btn-outline-primary btn-sm" type="button" disabled>
+              Nueva
+            </button>
+          </div>
+
+          <div id="alertaConfigProductoNuevo" class="alert alert-info mb-0">
+            Guarda primero el producto para crear configuraciones.
+          </div>
+
+          <div id="listaConfiguraciones" class="d-none"></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card shadow-sm">
+      <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between gap-2">
+        <div>
+          <h2 class="h5 mb-1">Variantes / ofertas</h2>
+          <small class="text-muted">
+            Presentaciones vendibles con precio, stock, marca del repuesto y Merchant.
+          </small>
+        </div>
+
+        <button id="btnNuevaVariante" class="btn btn-outline-primary btn-sm" type="button" disabled>
+          Nueva
+        </button>
+      </div>
+
+      <div class="card-body">
+        <div id="alertaVariantesProductoNuevo" class="alert alert-info mb-0">
+          Guarda primero el producto para crear variantes.
+        </div>
+
+        <div id="listaVariantes" class="d-none"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal producto -->
+  <div class="modal fade" id="modalProducto" tabindex="-1" aria-labelledby="tituloModalProducto" aria-hidden="true">
+    <div class="modal-dialog modal-admin-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="formProducto">
+          <div class="modal-header">
+            <div>
+              <h2 id="tituloModalProducto" class="modal-title h5">
+                Editar producto
+              </h2>
+              <small class="text-muted">
+                Datos técnicos base. No incluye precio, stock ni Merchant.
+              </small>
+            </div>
+
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="nombre" class="form-label">Nombre del producto</label>
+                <input
+                  id="nombre"
+                  name="nombre"
+                  type="text"
+                  class="form-control"
+                  required
+                  maxlength="180"
+                  placeholder=""
+                >
+              </div>
+
+              <div class="col-12">
+                <label for="slug" class="form-label">Slug automático</label>
+                <input
+                  id="slug"
+                  name="slug"
+                  type="text"
+                  class="form-control"
+                  required
+                  maxlength="200"
+                  readonly
+                  placeholder=""
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="categoria_id" class="form-label">Categoría</label>
+                <select id="categoria_id" name="categoria_id" class="form-select" required>
+                  <option value="">Selecciona...</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="marca_ids" class="form-label">Marca(s) / aplicación</label>
+                <select id="marca_ids" name="marca_ids" class="form-select" multiple size="4">
+                </select>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="tipo_repuesto" class="form-label">Tipo detectado</label>
+                <input
+                  id="tipo_repuesto"
+                  name="tipo_repuesto"
+                  type="text"
+                  class="form-control bg-light"
+                  required
+                  maxlength="80"
+                  readonly
+                  placeholder="Se detecta según la categoría"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="referencia_original" class="form-label">
+                  OEM / referencia original
+                </label>
+                <input
+                  id="referencia_original"
+                  name="referencia_original"
+                  type="text"
+                  class="form-control"
+                  maxlength="120"
+                  placeholder="OEM / número de parte"
+                >
+              </div>
+
+              <div class="col-12">
+                <hr class="my-2">
+                <h3 class="h6 mb-0">Datos técnicos</h3>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="motor" class="form-label">Motor(es)</label>
+                <input
+                  id="motor"
+                  name="motor"
+                  type="text"
+                  class="form-control"
+                  maxlength="120"
+                  placeholder="2KD-FTV"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="cilindraje" class="form-label">Cilindraje(s)</label>
+                <input
+                  id="cilindraje"
+                  name="cilindraje"
+                  type="text"
+                  class="form-control"
+                  maxlength="60"
+                  placeholder="2.5"
+                >
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="tipo_combustible" class="form-label">Combustible</label>
+                <input
+                  id="tipo_combustible"
+                  name="tipo_combustible"
+                  type="text"
+                  class="form-control"
+                  maxlength="30"
+                  placeholder="Diesel"
+                >
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="numero_cilindros" class="form-label">N. Cilindros</label>
+                <input
+                  id="numero_cilindros"
+                  name="numero_cilindros"
+                  type="text"
+                  class="form-control"
+                  maxlength="30"
+                  placeholder="4"
+                >
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="numero_valvulas" class="form-label">N. Válvulas</label>
+                <input
+                  id="numero_valvulas"
+                  name="numero_valvulas"
+                  type="text"
+                  class="form-control"
+                  maxlength="30"
+                  placeholder="16"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="material" class="form-label">Material</label>
+                <input
+                  id="material"
+                  name="material"
+                  type="text"
+                  class="form-control"
+                  maxlength="80"
+                  placeholder="Aluminio"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="anos_compatibles" class="form-label">Años compatibles</label>
+                <input
+                  id="anos_compatibles"
+                  name="anos_compatibles"
+                  type="text"
+                  class="form-control"
+                  maxlength="120"
+                  placeholder="2006, 2007"
+                >
+              </div>
+
+              <div class="col-12">
+                <label for="vehiculos_compatibles" class="form-label">Vehículos compatibles</label>
+                <textarea
+                  id="vehiculos_compatibles"
+                  name="vehiculos_compatibles"
+                  class="form-control"
+                  rows="3"
+                  placeholder="- Toyota Hilux Vigo 2.5 2006-2011&#10;- Kia Sportage 2.0 2008-2012"
+                ></textarea>
+              </div>
+
+              <div class="col-12">
+                <label for="observaciones_tecnicas" class="form-label">Observaciones técnicas</label>
+                <textarea
+                  id="observaciones_tecnicas"
+                  name="observaciones_tecnicas"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Notas internas o técnicas generales del producto"
+                ></textarea>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="garantia_tiempo" class="form-label">Garantía</label>
+                <input
+                  id="garantia_tiempo"
+                  name="garantia_tiempo"
+                  type="text"
+                  class="form-control"
+                  maxlength="80"
+                  placeholder="6 meses"
+                >
+              </div>
+
+              <div class="col-12">
+                <hr class="my-2">
+                <h3 class="h6 mb-0">Estado</h3>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="estado_publicacion" class="form-label">Publicación</label>
+                <select id="estado_publicacion" name="estado_publicacion" class="form-select">
+                  <option value="borrador">Borrador</option>
+                  <option value="publicado">Publicado</option>
+                  <option value="oculto">Oculto</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-md-8">
+                <div class="form-check-lineal">
+                  <div class="form-check">
+                    <input id="mostrar_precio" name="mostrar_precio" class="form-check-input" type="checkbox" checked>
+                    <label class="form-check-label" for="mostrar_precio">
+                      Mostrar precio
+                    </label>
+                  </div>
+
+                  <div class="form-check">
+                    <input id="destacado" name="destacado" class="form-check-input" type="checkbox">
+                    <label class="form-check-label" for="destacado">
+                      Destacado
+                    </label>
+                  </div>
+
+                  <div class="form-check">
+                    <input id="activo" name="activo" class="form-check-input" type="checkbox" checked>
+                    <label class="form-check-label" for="activo">
+                      Activo
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button id="btnGuardarProducto" class="btn btn-outline-primary" type="submit">
+              Guardar producto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal configuración -->
+  <div class="modal fade" id="modalConfiguracion" tabindex="-1" aria-labelledby="tituloModalConfiguracion" aria-hidden="true">
+    <div class="modal-dialog modal-admin-md modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="formConfiguracion">
+          <div class="modal-header">
+            <div>
+              <h2 id="tituloModalConfiguracion" class="modal-title h5">Nueva configuración</h2>
+              <small class="text-muted">
+                Usa atributos genéricos para que funcione con cualquier autoparte.
+              </small>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" id="configuracion_id" name="configuracion_id">
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="configuracion_nombre" class="form-label">Nombre</label>
+                <input
+                  id="configuracion_nombre"
+                  name="nombre"
+                  type="text"
+                  class="form-control"
+                  required
+                  maxlength="120"
+                  placeholder="Ej: Inyector 21 mm, STD, 0.25, 3/4, Juego x4"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="atributo_principal_nombre" class="form-label">Atributo principal</label>
+                <input
+                  id="atributo_principal_nombre"
+                  name="atributo_principal_nombre"
+                  type="text"
+                  class="form-control"
+                  maxlength="80"
+                  placeholder="Ej: Medida, presentación, inyector"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="atributo_principal_valor" class="form-label">Valor principal</label>
+                <input
+                  id="atributo_principal_valor"
+                  name="atributo_principal_valor"
+                  type="text"
+                  class="form-control"
+                  maxlength="120"
+                  placeholder="Ej: STD, 21 mm, 3/4"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="atributo_secundario_nombre" class="form-label">Atributo secundario</label>
+                <input
+                  id="atributo_secundario_nombre"
+                  name="atributo_secundario_nombre"
+                  type="text"
+                  class="form-control"
+                  maxlength="80"
+                  placeholder="Ej: Puertos"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="atributo_secundario_valor" class="form-label">Valor secundario</label>
+                <input
+                  id="atributo_secundario_valor"
+                  name="atributo_secundario_valor"
+                  type="text"
+                  class="form-control"
+                  maxlength="120"
+                  placeholder="Ej: 4"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="atributo_extra_nombre" class="form-label">Atributo extra</label>
+                <input
+                  id="atributo_extra_nombre"
+                  name="atributo_extra_nombre"
+                  type="text"
+                  class="form-control"
+                  maxlength="80"
+                  placeholder="Ej: Versión"
+                >
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="atributo_extra_valor" class="form-label">Valor extra</label>
+                <input
+                  id="atributo_extra_valor"
+                  name="atributo_extra_valor"
+                  type="text"
+                  class="form-control"
+                  maxlength="120"
+                  placeholder="Ej: Europea"
+                >
+              </div>
+
+              <div class="col-12">
+                <label for="configuracion_observaciones" class="form-label">Observaciones</label>
+                <textarea
+                  id="configuracion_observaciones"
+                  name="observaciones"
+                  class="form-control"
+                  rows="2"
+                ></textarea>
+              </div>
+
+              <div class="col-12">
+                <div class="form-check-lineal">
+                  <div class="form-check">
+                    <input id="configuracion_activa" name="activa" class="form-check-input" type="checkbox" checked>
+                    <label for="configuracion_activa" class="form-check-label">Activa</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input id="configuracion_predeterminada" name="es_predeterminada" class="form-check-input" type="checkbox">
+                    <label for="configuracion_predeterminada" class="form-check-label">Predeterminada</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button id="btnGuardarConfiguracion" type="submit" class="btn btn-outline-primary">
+              Guardar configuración
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal variante -->
+  <div class="modal fade" id="modalVariante" tabindex="-1" aria-labelledby="tituloModalVariante" aria-hidden="true">
+    <div class="modal-dialog modal-admin-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="formVariante">
+          <div class="modal-header">
+            <div>
+              <h2 id="tituloModalVariante" class="modal-title h5">Nueva variante</h2>
+              <small class="text-muted">
+                Oferta vendible: tipo, precio, stock, marca, SEO y Merchant.
+              </small>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" id="variante_id" name="variante_id">
+
+            <ul class="nav nav-tabs form-variante-tabs" id="tabsVariante" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link active"
+                  id="tab-variante-operacion"
+                  data-bs-toggle="tab"
+                  data-bs-target="#panel-variante-operacion"
+                  type="button"
+                  role="tab"
+                  aria-controls="panel-variante-operacion"
+                  aria-selected="true"
+                >
+                  Variante
+                </button>
+              </li>
+
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="tab-variante-seo"
+                  data-bs-toggle="tab"
+                  data-bs-target="#panel-variante-seo"
+                  type="button"
+                  role="tab"
+                  aria-controls="panel-variante-seo"
+                  aria-selected="false"
+                >
+                  SEO / Merchant
+                </button>
+              </li>
+
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="tab-variante-paquete"
+                  data-bs-toggle="tab"
+                  data-bs-target="#panel-variante-paquete"
+                  type="button"
+                  role="tab"
+                  aria-controls="panel-variante-paquete"
+                  aria-selected="false"
+                >
+                  Incluye / paquete
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content form-variante-seccion">
+              <div
+                class="tab-pane fade show active"
+                id="panel-variante-operacion"
+                role="tabpanel"
+                aria-labelledby="tab-variante-operacion"
+                tabindex="0"
+              >
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <input type="hidden" id="variante_principal" name="variante_principal">
+
+                    <div id="grupo-variante-principal-culatas">
+                      <label for="variante_principal_select" class="form-label">Tipo comercial</label>
+                      <select id="variante_principal_select" class="form-select">
+                        <option value="">Selecciona...</option>
+                        <option value="Sola">Sola</option>
+                        <option value="Parcial">Parcial</option>
+                        <option value="Completa">Completa</option>
+                      </select>
+                    </div>
+
+                    <div id="grupo-variante-principal-auto" class="d-none">
+                      <label for="variante_principal_visual" class="form-label">Tipo comercial</label>
+                      <input
+                        id="variante_principal_visual"
+                        type="text"
+                        class="form-control bg-light"
+                        readonly
+                        placeholder="Se detecta según la categoría"
+                      >
+
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label for="variante_configuracion_id" class="form-label">Configuración</label>
+                    <select id="variante_configuracion_id" name="configuracion_id" class="form-select">
+                      <option value="">Sin configuración</option>
+                    </select>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label for="variante_marca_repuesto" class="form-label">Marca del repuesto</label>
+                    <input
+                      id="variante_marca_repuesto"
+                      name="marca_repuesto"
+                      type="text"
+                      class="form-control"
+                      maxlength="100"
+                      placeholder="ALDI"
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label for="variante_nombre" class="form-label">Incluye / descripción corta</label>
+                    <input
+                      id="variante_nombre"
+                      name="nombre"
+                      type="text"
+                      class="form-control"
+                      required
+                      maxlength="150"
+                      placeholder=""
+                    >
+                  </div>
+
+                  <div class="col-12">
+                    <hr class="my-2">
+                  </div>
+
+                  <div class="col-12 col-md-3">
+                    <label for="variante_precio" class="form-label">Precio venta</label>
+                    <input
+                      id="variante_precio"
+                      name="precio"
+                      type="number"
+                      class="form-control"
+                      min="1"
+                      step="1"
+                      required
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-3">
+                    <label for="variante_costo" class="form-label">Costo</label>
+                    <input
+                      id="variante_costo"
+                      name="costo"
+                      type="number"
+                      class="form-control"
+                      min="0"
+                      step="1"
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-3">
+                    <label for="variante_stock" class="form-label">Stock</label>
+                    <input
+                      id="variante_stock"
+                      name="stock"
+                      type="number"
+                      class="form-control"
+                      min="0"
+                      step="1"
+                      value="0"
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-3">
+                    <label for="variante_stock_minimo" class="form-label">Stock mínimo</label>
+                    <input
+                      id="variante_stock_minimo"
+                      name="stock_minimo"
+                      type="number"
+                      class="form-control"
+                      min="0"
+                      step="1"
+                      value="0"
+                    >
+                  </div>
+
+                  <div class="col-12">
+                    <hr class="my-2">
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label for="variante_codigo_interno" class="form-label">Código interno</label>
+                    <input
+                      id="variante_codigo_interno"
+                      name="codigo_interno"
+                      type="text"
+                      class="form-control"
+                      maxlength="60"
+                      placeholder="CS0281"
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label for="variante_referencia_oem" class="form-label">Referencia OEM</label>
+                    <input
+                      id="variante_referencia_oem"
+                      name="referencia_oem"
+                      type="text"
+                      class="form-control"
+                      maxlength="120"
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label for="variante_ubicacion" class="form-label">Ubicación</label>
+                    <input
+                      id="variante_ubicacion"
+                      name="ubicacion"
+                      type="text"
+                      class="form-control"
+                      maxlength="30"
+                      placeholder="1C3"
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-8">
+                    <label for="variante_secundaria" class="form-label">Detalle adicional</label>
+                    <input
+                      id="variante_secundaria"
+                      name="variante_secundaria"
+                      type="text"
+                      class="form-control"
+                      maxlength="100"
+                    >
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label for="variante_condicion" class="form-label">Condición</label>
+                    <select id="variante_condicion" name="condicion" class="form-select">
+                      <option value="nuevo">Nuevo</option>
+                    </select>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="form-check-lineal">
+                      <div class="form-check">
+                        <input id="variante_activa" name="activa" class="form-check-input" type="checkbox" checked>
+                        <label for="variante_activa" class="form-check-label">Activa</label>
+                      </div>
+
+                      <div class="form-check">
+                        <input id="variante_predeterminada" name="es_predeterminada" class="form-check-input" type="checkbox">
+                        <label for="variante_predeterminada" class="form-check-label">Predeterminada</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="tab-pane fade"
+                id="panel-variante-seo"
+                role="tabpanel"
+                aria-labelledby="tab-variante-seo"
+                tabindex="0"
+              >
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label for="variante_slug" class="form-label">Slug comercial</label>
+                    <input
+                      id="variante_slug"
+                      name="slug"
+                      type="text"
+                      class="form-control"
+                      maxlength="220"
+                      readonly
+                      placeholder="Se genera automáticamente"
+                    >
+                  </div>
+
+                  <div class="col-12">
+                    <label for="variante_titulo_seo" class="form-label">Título SEO / Merchant</label>
+                    <input
+                      id="variante_titulo_seo"
+                      name="titulo_seo"
+                      type="text"
+                      class="form-control"
+                      maxlength="150"
+                      placeholder="Se genera automáticamente si lo dejas vacío"
+                    >
+                    <div class="campo-ayuda mt-1">
+                      Máximo 150 caracteres. Ideal: 60-75 caracteres.
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <label for="variante_resumen_seo" class="form-label">Resumen SEO</label>
+                    <input
+                      id="variante_resumen_seo"
+                      name="resumen_seo"
+                      type="text"
+                      class="form-control"
+                      maxlength="255"
+                      placeholder="Descripción corta para Google y resultados internos"
+                    >
+                  </div>
+
+                  <div class="col-12">
+                    <label for="variante_descripcion_merchant" class="form-label">Descripción Merchant</label>
+                    <textarea
+                      id="variante_descripcion_merchant"
+                      name="descripcion_merchant"
+                      class="form-control"
+                      rows="6"
+                      placeholder="Descripción de la oferta vendible para Merchant Center"
+                    ></textarea>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="form-check">
+                      <input id="variante_publicar_merchant" name="publicar_merchant" class="form-check-input" type="checkbox">
+                      <label for="variante_publicar_merchant" class="form-check-label">
+                        Publicar en Merchant Center
+                      </label>
+                    </div>
+                    <div class="campo-ayuda mt-1">
+                      Actívalo solo si esta variante debe salir en el feed de Google Merchant Center.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="tab-pane fade"
+                id="panel-variante-paquete"
+                role="tabpanel"
+                aria-labelledby="tab-variante-paquete"
+                tabindex="0"
+              >
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label for="variante_incluye" class="form-label">Incluye</label>
+                    <textarea
+                      id="variante_incluye"
+                      name="incluye"
+                      class="form-control"
+                      rows="7"
+                      placeholder="- 16 guías de válvulas&#10;- 16 asientos de válvulas"
+                    ></textarea>
+                  </div>
+
+                  <div class="col-12">
+                    <label for="variante_paquete" class="form-label">Paquete</label>
+                    <textarea
+                      id="variante_paquete"
+                      name="paquete"
+                      class="form-control"
+                      rows="5"
+                      placeholder="- Caja de cartón&#10;- Dimensiones: 20 x 40 x 60 cm"
+                    ></textarea>
+                  </div>
+
+                  <div class="col-12">
+                    <label for="variante_sku" class="form-label">SKU opcional</label>
+                    <input
+                      id="variante_sku"
+                      name="sku"
+                      type="text"
+                      class="form-control"
+                      maxlength="100"
+                      placeholder=""
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button id="btnGuardarVariante" type="submit" class="btn btn-outline-primary">
+              Guardar variante
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal confirmar cambio de estado de variante -->
+  <div class="modal fade" id="modalConfirmarDesactivarVariante" tabindex="-1" aria-labelledby="tituloModalConfirmarDesactivarVariante" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="tituloModalConfirmarDesactivarVariante" class="modal-title h5">
+            Cambiar estado de variante
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body">
+          <p id="textoConfirmarEstadoVariante" class="mb-1">
+            ¿Deseas cambiar el estado de esta variante?
+          </p>
+          <p class="text-muted small mb-0">
+            No se eliminará del sistema. Solo cambiará su estado operativo.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cancelar
+          </button>
+          <button id="btnConfirmarDesactivarVariante" type="button" class="btn btn-outline-danger">
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="contenedorToast" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="./js/pages/producto-form.js"></script>
+</body>
+</html>
