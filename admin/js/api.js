@@ -29,6 +29,18 @@ function construirHeadersGetAutorizados() {
   };
 }
 
+function construirHeadersFormularioAutorizados() {
+  const token = obtenerTokenAcceso();
+
+  if (!token) {
+    throw new Error("No hay sesión activa. Inicia sesión nuevamente.");
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 async function manejarRespuesta(respuesta) {
   if (respuesta.status === 401) {
     localStorage.removeItem("token_acceso");
@@ -99,6 +111,33 @@ async function enviarJson(ruta, metodo, payload = null) {
   const opciones = {
     method: metodo,
     headers: construirHeadersAutorizados(),
+  };
+
+  if (payload !== null) {
+    opciones.body = JSON.stringify(payload);
+  }
+
+  const respuesta = await fetch(`${URL_BASE_API}${ruta}`, opciones);
+
+  return manejarRespuesta(respuesta);
+}
+
+async function enviarFormulario(ruta, metodo, formData) {
+  const respuesta = await fetch(`${URL_BASE_API}${ruta}`, {
+    method: metodo,
+    headers: construirHeadersFormularioAutorizados(),
+    body: formData,
+  });
+
+  return manejarRespuesta(respuesta);
+}
+
+async function enviarJsonPublico(ruta, metodo, payload = null) {
+  const opciones = {
+    method: metodo,
+    headers: {
+      "Content-Type": "application/json",
+    },
   };
 
   if (payload !== null) {
@@ -204,6 +243,37 @@ export async function desactivarVarianteProducto(varianteId) {
 }
 
 
+export async function obtenerImagenesVariante(varianteId) {
+  return obtenerJson(`/admin/variantes/${varianteId}/imagenes`);
+}
+
+export async function subirImagenVariante(varianteId, payload) {
+  const formData = new FormData();
+
+  formData.append("archivo", payload.archivo);
+
+  if (payload.texto_alternativo) {
+    formData.append("texto_alternativo", payload.texto_alternativo);
+  }
+
+  if (payload.orden !== null && payload.orden !== undefined && payload.orden !== "") {
+    formData.append("orden", payload.orden);
+  }
+
+  formData.append("es_principal", payload.es_principal ? "true" : "false");
+
+  return enviarFormulario(`/admin/variantes/${varianteId}/imagenes`, "POST", formData);
+}
+
+export async function actualizarImagenVariante(imagenId, payload) {
+  return enviarJson(`/admin/variantes/imagenes/${imagenId}`, "PATCH", payload);
+}
+
+export async function eliminarImagenVariante(imagenId) {
+  return enviarJson(`/admin/variantes/imagenes/${imagenId}`, "DELETE");
+}
+
+
 export async function crearVenta(payload) {
   return enviarJson("/admin/ventas", "POST", payload);
 }
@@ -223,6 +293,7 @@ export async function actualizarVenta(ventaId, payload) {
 export async function anularVenta(ventaId, payload) {
   return enviarJson(`/admin/ventas/${ventaId}/anular`, "POST", payload);
 }
+
 
 export async function obtenerCategoriasAdmin(parametros = {}) {
   return obtenerJson("/admin/categorias", parametros);
@@ -248,6 +319,7 @@ export async function desactivarCategoria(categoriaId) {
   return enviarJson(`/admin/categorias/${categoriaId}/desactivar`, "PATCH");
 }
 
+
 export async function obtenerMarcasAdmin(parametros = {}) {
   return obtenerJson("/admin/marcas", parametros);
 }
@@ -271,6 +343,7 @@ export async function activarMarca(marcaId) {
 export async function desactivarMarca(marcaId) {
   return enviarJson(`/admin/marcas/${marcaId}/desactivar`, "PATCH");
 }
+
 
 export async function obtenerUsuariosAdmin(parametros = {}) {
   return obtenerJson("/admin/usuarios", parametros);
@@ -298,4 +371,25 @@ export async function desactivarUsuarioAdmin(usuarioId) {
 
 export async function cambiarPasswordUsuarioAdmin(usuarioId, payload) {
   return enviarJson(`/admin/usuarios/${usuarioId}/password`, "PATCH", payload);
+}
+
+
+export async function obtenerSolicitudesAdmin(parametros = {}) {
+  return obtenerJson("/admin/solicitudes", parametros);
+}
+
+export async function obtenerDetalleSolicitudAdmin(solicitudId) {
+  return obtenerJson(`/admin/solicitudes/${solicitudId}`);
+}
+
+export async function actualizarSolicitudAdmin(solicitudId, payload) {
+  return enviarJson(`/admin/solicitudes/${solicitudId}`, "PATCH", payload);
+}
+
+export async function cambiarEstadoSolicitudAdmin(solicitudId, payload) {
+  return enviarJson(`/admin/solicitudes/${solicitudId}/estado`, "PATCH", payload);
+}
+
+export async function crearSolicitudPublica(payload) {
+  return enviarJsonPublico("/public/solicitudes", "POST", payload);
 }
