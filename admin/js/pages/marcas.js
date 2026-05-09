@@ -6,10 +6,18 @@ import {
   desactivarMarca,
 } from "../api.js";
 
+import {
+  protegerSoloAdmin,
+  aplicarPermisosVisuales,
+  configurarBotonCerrarSesion,
+  iniciarIndicadorSesion,
+  finalizarCargaAdmin,
+} from "../auth.js";
+
 let marcasOriginales = [];
 let marcaEditando = null;
+let modalMarca = null;
 
-const btnCerrarSesion = document.getElementById("btnCerrarSesion");
 const btnNuevaMarca = document.getElementById("btnNuevaMarca");
 const btnRecargarMarcas = document.getElementById("btnRecargarMarcas");
 
@@ -21,7 +29,6 @@ const textoCantidadMarcas = document.getElementById("textoCantidadMarcas");
 const contenedorAlertaMarcas = document.getElementById("contenedorAlertaMarcas");
 
 const modalMarcaElemento = document.getElementById("modalMarca");
-const modalMarca = new bootstrap.Modal(modalMarcaElemento);
 
 const formMarca = document.getElementById("formMarca");
 const tituloModalMarca = document.getElementById("tituloModalMarca");
@@ -36,29 +43,34 @@ const contenedorToast = document.getElementById("contenedorToast");
 document.addEventListener("DOMContentLoaded", iniciarPagina);
 
 async function iniciarPagina() {
-  if (!validarSesion()) return;
-
-  registrarEventos();
-  await cargarMarcas();
-}
-
-function validarSesion() {
-  const token = localStorage.getItem("token_acceso");
-
-  if (!token) {
-    window.location.href = "./login.html";
-    return false;
+  if (!protegerSoloAdmin()) {
+    finalizarCargaAdmin();
+    return;
   }
 
-  return true;
+  try {
+    aplicarPermisosVisuales();
+    configurarBotonCerrarSesion();
+    iniciarIndicadorSesion();
+
+    inicializarModales();
+    registrarEventos();
+
+    await cargarMarcas();
+  } catch (error) {
+    mostrarToast(error.message || "No fue posible cargar la página de marcas vehículo.", "danger");
+  } finally {
+    finalizarCargaAdmin();
+  }
+}
+
+function inicializarModales() {
+  if (modalMarcaElemento && window.bootstrap) {
+    modalMarca = new bootstrap.Modal(modalMarcaElemento);
+  }
 }
 
 function registrarEventos() {
-  btnCerrarSesion?.addEventListener("click", () => {
-    localStorage.removeItem("token_acceso");
-    window.location.href = "./login.html";
-  });
-
   btnNuevaMarca?.addEventListener("click", abrirModalNuevaMarca);
   btnRecargarMarcas?.addEventListener("click", cargarMarcas);
 
@@ -160,7 +172,7 @@ function renderizarMarcas() {
               <button
                 type="button"
                 class="btn btn-icono"
-                title="Editar marca"
+                title="Editar marca vehículo"
                 data-accion="editar"
                 data-id="${marca.id}"
               >
@@ -170,7 +182,7 @@ function renderizarMarcas() {
               <button
                 type="button"
                 class="btn btn-icono"
-                title="${activa ? "Desactivar" : "Activar"} marca"
+                title="${activa ? "Desactivar" : "Activar"} marca vehículo"
                 data-accion="${activa ? "desactivar" : "activar"}"
                 data-id="${marca.id}"
               >
@@ -210,7 +222,7 @@ function abrirModalNuevaMarca() {
   marcaSlug.value = "";
   marcaActiva.checked = true;
 
-  modalMarca.show();
+  modalMarca?.show();
 }
 
 function abrirModalEditarMarca(marca) {
@@ -222,7 +234,7 @@ function abrirModalEditarMarca(marca) {
   marcaSlug.value = marca.slug || "";
   marcaActiva.checked = marca.activa !== false;
 
-  modalMarca.show();
+  modalMarca?.show();
 }
 
 async function guardarMarca(evento) {
@@ -239,27 +251,27 @@ async function guardarMarca(evento) {
     };
 
     if (!payload.nombre) {
-      throw new Error("El nombre de la marca es obligatorio.");
+      throw new Error("El nombre de la marca vehículo es obligatorio.");
     }
 
     if (!payload.slug) {
-      throw new Error("El slug de la marca es obligatorio.");
+      throw new Error("El slug de la marca vehículo es obligatorio.");
     }
 
     const id = Number(marcaId.value);
 
     if (id) {
       await actualizarMarca(id, payload);
-      mostrarToast("Marca actualizada correctamente.", "success");
+      mostrarToast("Marca vehículo actualizada correctamente.", "success");
     } else {
       await crearMarca(payload);
-      mostrarToast("Marca creada correctamente.", "success");
+      mostrarToast("Marca vehículo creada correctamente.", "success");
     }
 
-    modalMarca.hide();
+    modalMarca?.hide();
     await cargarMarcas();
   } catch (error) {
-    mostrarToast(error.message || "No fue posible guardar la marca.", "danger");
+    mostrarToast(error.message || "No fue posible guardar la marca vehículo.", "danger");
   } finally {
     btnGuardarMarca.disabled = false;
     btnGuardarMarca.textContent = "Guardar marca";
@@ -279,7 +291,7 @@ async function manejarAccionesTabla(evento) {
   const marca = marcasOriginales.find((item) => Number(item.id) === id);
 
   if (!marca) {
-    mostrarToast("No se encontró la marca seleccionada.", "danger");
+    mostrarToast("No se encontró la marca vehículo seleccionada.", "danger");
     return;
   }
 
@@ -302,10 +314,10 @@ async function cambiarEstadoMarca(id, activar) {
   try {
     if (activar) {
       await activarMarca(id);
-      mostrarToast("Marca activada correctamente.", "success");
+      mostrarToast("Marca vehículo activada correctamente.", "success");
     } else {
       await desactivarMarca(id);
-      mostrarToast("Marca desactivada correctamente.", "success");
+      mostrarToast("Marca vehículo desactivada correctamente.", "success");
     }
 
     await cargarMarcas();

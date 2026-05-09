@@ -1688,3 +1688,172 @@ html.admin-cargando body {
     margin: 0.75rem 0;
   }
 }
+
+.imagen-variante-preview {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagen-variante-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== LOGIN ADMIN ===== */
+
+.login-admin-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at top left, rgba(13, 110, 253, 0.08), transparent 32rem),
+    var(--color-fondo);
+}
+
+.login-admin-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-admin-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background-color: var(--color-negro-superior);
+  color: var(--color-blanco);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fuente-titulos);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.login-admin-ayuda {
+  color: var(--color-texto-suave);
+  font-size: 0.875rem;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-control {
+  padding-right: 3rem;
+}
+
+.btn-ver-password {
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--color-texto-suave);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-ver-password:hover,
+.btn-ver-password:focus {
+  background-color: #f1f3f5;
+  color: var(--color-negro);
+  outline: none;
+}
+
+.btn-ver-password svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+@media (max-width: 575.98px) {
+  .login-admin-wrapper {
+    align-items: flex-start;
+    padding-top: 4rem;
+  }
+
+  .login-admin-card {
+    max-width: 100%;
+  }
+}
+
+/* ===== IMÁGENES VARIANTE ===== */
+
+.imagen-variante-preview {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--color-borde);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagen-variante-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagen-variante-orden-col {
+  width: 110px;
+  flex: 0 0 110px;
+}
+
+.input-orden-imagen {
+  width: 90px;
+  min-width: 90px;
+}
+
+.imagen-variante-principal-col {
+  display: flex;
+  align-items: end;
+  min-width: 130px;
+}
+
+.imagen-variante-subir-col {
+  display: flex;
+  align-items: end;
+}
+
+.btn-subir-imagen-variante {
+  min-width: 110px;
+  height: 44px;
+  padding: 0.45rem 1.15rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+  .imagen-variante-orden-col {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .input-orden-imagen {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .imagen-variante-principal-col,
+  .imagen-variante-subir-col {
+    width: 100%;
+  }
+
+  .btn-subir-imagen-variante {
+    width: 100%;
+  }
+}

@@ -6,6 +6,13 @@ import {
   obtenerProductos,
 } from "../api.js";
 
+import {
+  protegerSoloAdmin,
+  aplicarPermisosVisuales,
+  configurarBotonCerrarSesion,
+  iniciarIndicadorSesion,
+  finalizarCargaAdmin,
+} from "../auth.js";
 
 const COLUMNAS_TABLA_PRODUCTOS = 7;
 
@@ -30,7 +37,6 @@ const elementos = {
   btnRecargar: document.getElementById("btnRecargarProductos"),
   btnPaginaAnterior: document.getElementById("btnPaginaAnterior"),
   btnPaginaSiguiente: document.getElementById("btnPaginaSiguiente"),
-  btnCerrarSesion: document.getElementById("btnCerrarSesion"),
 
   selectCategoria: document.getElementById("categoria_id"),
   selectMarca: document.getElementById("marca_id"),
@@ -46,13 +52,16 @@ let modalEstado = null;
 document.addEventListener("DOMContentLoaded", iniciarPagina);
 
 async function iniciarPagina() {
-  const tieneSesion = validarSesion();
-
-  if (!tieneSesion) {
+  if (!protegerSoloAdmin()) {
+    finalizarCargaAdmin();
     return;
   }
 
   try {
+    aplicarPermisosVisuales();
+    configurarBotonCerrarSesion();
+    iniciarIndicadorSesion();
+
     if (elementos.modalConfirmacionEstado && window.bootstrap) {
       modalEstado = new bootstrap.Modal(elementos.modalConfirmacionEstado);
     }
@@ -69,18 +78,9 @@ async function iniciarPagina() {
   } catch (error) {
     console.error(error);
     mostrarMensajeError(error.message);
+  } finally {
+    finalizarCargaAdmin();
   }
-}
-
-function validarSesion() {
-  const token = localStorage.getItem("token_acceso");
-
-  if (!token) {
-    window.location.href = "./login.html";
-    return false;
-  }
-
-  return true;
 }
 
 function registrarEventos() {
@@ -108,11 +108,6 @@ function registrarEventos() {
 
     estado.pagina += 1;
     await cargarProductos();
-  });
-
-  elementos.btnCerrarSesion?.addEventListener("click", () => {
-    localStorage.removeItem("token_acceso");
-    window.location.href = "./login.html";
   });
 
   elementos.tabla?.addEventListener("click", manejarAccionTabla);
