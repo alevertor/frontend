@@ -6,10 +6,18 @@ import {
   desactivarCategoria,
 } from "../api.js";
 
+import {
+  protegerSoloAdmin,
+  aplicarPermisosVisuales,
+  configurarBotonCerrarSesion,
+  iniciarIndicadorSesion,
+  finalizarCargaAdmin,
+} from "../auth.js";
+
 let categoriasOriginales = [];
 let categoriaEditando = null;
+let modalCategoria = null;
 
-const btnCerrarSesion = document.getElementById("btnCerrarSesion");
 const btnNuevaCategoria = document.getElementById("btnNuevaCategoria");
 const btnRecargarCategorias = document.getElementById("btnRecargarCategorias");
 
@@ -21,7 +29,6 @@ const textoCantidadCategorias = document.getElementById("textoCantidadCategorias
 const contenedorAlertaCategorias = document.getElementById("contenedorAlertaCategorias");
 
 const modalCategoriaElemento = document.getElementById("modalCategoria");
-const modalCategoria = new bootstrap.Modal(modalCategoriaElemento);
 
 const formCategoria = document.getElementById("formCategoria");
 const tituloModalCategoria = document.getElementById("tituloModalCategoria");
@@ -36,29 +43,34 @@ const contenedorToast = document.getElementById("contenedorToast");
 document.addEventListener("DOMContentLoaded", iniciarPagina);
 
 async function iniciarPagina() {
-  if (!validarSesion()) return;
-
-  registrarEventos();
-  await cargarCategorias();
-}
-
-function validarSesion() {
-  const token = localStorage.getItem("token_acceso");
-
-  if (!token) {
-    window.location.href = "./login.html";
-    return false;
+  if (!protegerSoloAdmin()) {
+    finalizarCargaAdmin();
+    return;
   }
 
-  return true;
+  try {
+    aplicarPermisosVisuales();
+    configurarBotonCerrarSesion();
+    iniciarIndicadorSesion();
+
+    inicializarModales();
+    registrarEventos();
+
+    await cargarCategorias();
+  } catch (error) {
+    mostrarToast(error.message || "No fue posible cargar la página de categorías.", "danger");
+  } finally {
+    finalizarCargaAdmin();
+  }
+}
+
+function inicializarModales() {
+  if (modalCategoriaElemento && window.bootstrap) {
+    modalCategoria = new bootstrap.Modal(modalCategoriaElemento);
+  }
 }
 
 function registrarEventos() {
-  btnCerrarSesion?.addEventListener("click", () => {
-    localStorage.removeItem("token_acceso");
-    window.location.href = "./login.html";
-  });
-
   btnNuevaCategoria?.addEventListener("click", abrirModalNuevaCategoria);
   btnRecargarCategorias?.addEventListener("click", cargarCategorias);
 
@@ -210,7 +222,7 @@ function abrirModalNuevaCategoria() {
   categoriaSlug.value = "";
   categoriaActiva.checked = true;
 
-  modalCategoria.show();
+  modalCategoria?.show();
 }
 
 function abrirModalEditarCategoria(categoria) {
@@ -222,7 +234,7 @@ function abrirModalEditarCategoria(categoria) {
   categoriaSlug.value = categoria.slug || "";
   categoriaActiva.checked = categoria.activa !== false;
 
-  modalCategoria.show();
+  modalCategoria?.show();
 }
 
 async function guardarCategoria(evento) {
@@ -256,7 +268,7 @@ async function guardarCategoria(evento) {
       mostrarToast("Categoría creada correctamente.", "success");
     }
 
-    modalCategoria.hide();
+    modalCategoria?.hide();
     await cargarCategorias();
   } catch (error) {
     mostrarToast(error.message || "No fue posible guardar la categoría.", "danger");
