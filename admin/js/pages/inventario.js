@@ -12,8 +12,9 @@ import {
   aplicarPermisosVisuales,
   usuarioEsAdmin,
   iniciarIndicadorSesion,
-} from "../auth.js";;
+} from "../auth.js";
 
+const URL_BASE_BACKEND = "http://127.0.0.1:8000";
 const ES_ADMIN = usuarioEsAdmin();
 const COLUMNAS_TABLA_INVENTARIO = ES_ADMIN ? 10 : 9;
 
@@ -312,14 +313,23 @@ function construirUbicacion(valor) {
 }
 
 function construirRutaImagen(item) {
-  if (!item.imagen_categoria || !item.imagen_codigo) {
+  if (!item.imagen_principal_url) {
     return null;
   }
 
-  const categoria = encodeURIComponent(String(item.imagen_categoria));
-  const codigo = encodeURIComponent(String(item.imagen_codigo));
+  if (String(item.imagen_principal_url).startsWith("http")) {
+    return item.imagen_principal_url;
+  }
 
-  return `../public/img/productos/${categoria}/${codigo}/${codigo}-1.webp`;
+  return `${URL_BASE_BACKEND}${item.imagen_principal_url}`;
+}
+
+function construirAltImagen(item) {
+  return (
+    item.imagen_principal_alt ||
+    item.nombre_producto ||
+    "Imagen del producto"
+  );
 }
 
 function construirImagenInventario(item) {
@@ -333,7 +343,7 @@ function construirImagenInventario(item) {
     <div class="imagen-inventario-contenedor">
       <img
         src="${escaparAtributo(rutaImagen)}"
-        alt="${escaparAtributo(item.nombre_producto || "Imagen del producto")}"
+        alt="${escaparAtributo(construirAltImagen(item))}"
         class="imagen-inventario"
         loading="lazy"
         onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');"
@@ -716,12 +726,7 @@ function construirUrlProductoAdmin(productoId, varianteId = null) {
 }
 
 function renderizarDetalleVariante(detalle) {
-  const rutaImagen = construirRutaImagen({
-    imagen_categoria: detalle.imagen_categoria,
-    imagen_codigo: detalle.imagen_codigo,
-    nombre_producto: detalle.nombre_producto,
-  });
-
+  const rutaImagen = construirRutaImagen(detalle);
   const urlProductoPublico = construirUrlProductoPublico(detalle.slug_variante);
   const urlProductoAdmin = construirUrlProductoAdmin(detalle.producto_id, detalle.id);
   const tipoOferta = construirTipoOferta(detalle);
@@ -735,7 +740,7 @@ function renderizarDetalleVariante(detalle) {
             ? `
               <img
                 src="${escaparAtributo(rutaImagen)}"
-                alt="${escaparAtributo(detalle.nombre_producto || "Imagen del producto")}"
+                alt="${escaparAtributo(construirAltImagen(detalle))}"
                 loading="lazy"
                 onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');"
               >

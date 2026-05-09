@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="admin-cargando">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +16,7 @@
 <body class="bg-light">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
     <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="./dashboard.html">
+      <a class="navbar-brand fw-bold" href="./inventario.html">
         Solo Culatas
       </a>
 
@@ -34,7 +34,7 @@
 
       <div class="collapse navbar-collapse" id="menuAdmin">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
+          <li class="nav-item" data-solo-admin>
             <a class="nav-link" href="./dashboard.html">Dashboard</a>
           </li>
 
@@ -42,26 +42,32 @@
             <a class="nav-link" href="./inventario.html">Inventario</a>
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" data-solo-admin>
             <a class="nav-link active" href="./productos.html">Productos</a>
           </li>
 
           <li class="nav-item">
             <a class="nav-link" href="./ventas.html">Ventas</a>
           </li>
-          
+
           <li class="nav-item">
+            <a class="nav-link" href="./solicitudes.html">Solicitudes</a>
+          </li>
+
+          <li class="nav-item" data-solo-admin>
             <a class="nav-link" href="./usuarios.html">Usuarios</a>
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" data-solo-admin>
             <a class="nav-link" href="./categorias.html">Categorías</a>
           </li>
 
-          <li class="nav-item">
-            <a class="nav-link" href="./marcas.html">Marcas Vehículos</a>
+          <li class="nav-item" data-solo-admin>
+            <a class="nav-link" href="./marcas.html">Marcas vehículo</a>
           </li>
         </ul>
+
+        <div id="infoSesionAdmin" class="info-sesion-admin"></div>
 
         <button id="btnCerrarSesion" class="btn btn-outline-light btn-sm" type="button">
           Cerrar sesión
@@ -267,7 +273,9 @@
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-12">
-                <label for="nombre" class="form-label">Nombre del producto</label>
+                <label for="nombre" class="form-label">
+                  Nombre del producto <span class="text-danger">*</span>
+                </label>
                 <input
                   id="nombre"
                   name="nombre"
@@ -280,7 +288,9 @@
               </div>
 
               <div class="col-12">
-                <label for="slug" class="form-label">Slug automático</label>
+                <label for="slug" class="form-label">
+                  Slug automático <span class="text-danger">*</span>
+                </label>
                 <input
                   id="slug"
                   name="slug"
@@ -294,7 +304,9 @@
               </div>
 
               <div class="col-12 col-md-6">
-                <label for="categoria_id" class="form-label">Categoría</label>
+                <label for="categoria_id" class="form-label">
+                  Categoría <span class="text-danger">*</span>
+                </label>
                 <select id="categoria_id" name="categoria_id" class="form-select" required>
                   <option value="">Selecciona...</option>
                 </select>
@@ -307,7 +319,9 @@
               </div>
 
               <div class="col-12 col-md-6">
-                <label for="tipo_repuesto" class="form-label">Tipo detectado</label>
+                <label for="tipo_repuesto" class="form-label">
+                  Tipo detectado <span class="text-danger">*</span>
+                </label>
                 <input
                   id="tipo_repuesto"
                   name="tipo_repuesto"
@@ -531,7 +545,9 @@
 
             <div class="row g-3">
               <div class="col-12">
-                <label for="configuracion_nombre" class="form-label">Nombre</label>
+                <label for="configuracion_nombre" class="form-label">
+                  Nombre <span class="text-danger">*</span>
+                </label>
                 <input
                   id="configuracion_nombre"
                   name="nombre"
@@ -663,7 +679,7 @@
             <div>
               <h2 id="tituloModalVariante" class="modal-title h5">Nueva variante</h2>
               <small class="text-muted">
-                Oferta vendible: tipo, precio, stock, marca, SEO y Merchant.
+                Oferta vendible: tipo, precio, stock, marca, SEO, Merchant e imágenes.
               </small>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -717,6 +733,21 @@
                   Incluye / paquete
                 </button>
               </li>
+
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="tab-variante-imagenes"
+                  data-bs-toggle="tab"
+                  data-bs-target="#panel-variante-imagenes"
+                  type="button"
+                  role="tab"
+                  aria-controls="panel-variante-imagenes"
+                  aria-selected="false"
+                >
+                  Imágenes
+                </button>
+              </li>
             </ul>
 
             <div class="tab-content form-variante-seccion">
@@ -732,7 +763,9 @@
                     <input type="hidden" id="variante_principal" name="variante_principal">
 
                     <div id="grupo-variante-principal-culatas">
-                      <label for="variante_principal_select" class="form-label">Tipo comercial</label>
+                      <label for="variante_principal_select" class="form-label">
+                        Tipo comercial <span class="text-danger">*</span>
+                      </label>
                       <select id="variante_principal_select" class="form-select">
                         <option value="">Selecciona...</option>
                         <option value="Sola">Sola</option>
@@ -742,7 +775,9 @@
                     </div>
 
                     <div id="grupo-variante-principal-auto" class="d-none">
-                      <label for="variante_principal_visual" class="form-label">Tipo comercial</label>
+                      <label for="variante_principal_visual" class="form-label">
+                        Tipo comercial <span class="text-danger">*</span>
+                      </label>
                       <input
                         id="variante_principal_visual"
                         type="text"
@@ -750,7 +785,6 @@
                         readonly
                         placeholder="Se detecta según la categoría"
                       >
-
                     </div>
                   </div>
 
@@ -762,7 +796,9 @@
                   </div>
 
                   <div class="col-12 col-md-6">
-                    <label for="variante_marca_repuesto" class="form-label">Marca del repuesto</label>
+                    <label for="variante_marca_repuesto" class="form-label">
+                      Marca del repuesto <span class="text-danger">*</span>
+                    </label>
                     <input
                       id="variante_marca_repuesto"
                       name="marca_repuesto"
@@ -774,7 +810,9 @@
                   </div>
 
                   <div class="col-12 col-md-6">
-                    <label for="variante_nombre" class="form-label">Incluye / descripción corta</label>
+                    <label for="variante_nombre" class="form-label">
+                      Incluye / descripción corta <span class="text-danger">*</span>
+                    </label>
                     <input
                       id="variante_nombre"
                       name="nombre"
@@ -791,7 +829,9 @@
                   </div>
 
                   <div class="col-12 col-md-3">
-                    <label for="variante_precio" class="form-label">Precio venta</label>
+                    <label for="variante_precio" class="form-label">
+                      Precio venta <span class="text-danger">*</span>
+                    </label>
                     <input
                       id="variante_precio"
                       name="precio"
@@ -816,7 +856,9 @@
                   </div>
 
                   <div class="col-12 col-md-3">
-                    <label for="variante_stock" class="form-label">Stock</label>
+                    <label for="variante_stock" class="form-label">
+                      Stock <span class="text-danger">*</span>
+                    </label>
                     <input
                       id="variante_stock"
                       name="stock"
@@ -892,7 +934,9 @@
                   </div>
 
                   <div class="col-12 col-md-4">
-                    <label for="variante_condicion" class="form-label">Condición</label>
+                    <label for="variante_condicion" class="form-label">
+                      Condición <span class="text-danger">*</span>
+                    </label>
                     <select id="variante_condicion" name="condicion" class="form-select">
                       <option value="nuevo">Nuevo</option>
                     </select>
@@ -933,55 +977,99 @@
                       readonly
                       placeholder="Se genera automáticamente"
                     >
+                    <div class="campo-ayuda mt-1">
+                      URL amigable generada con los datos del producto y la variante.
+                    </div>
                   </div>
 
                   <div class="col-12">
-                    <label for="variante_titulo_seo" class="form-label">Título SEO / Merchant</label>
+                    <label for="variante_titulo_seo" class="form-label">
+                      Título SEO / Merchant
+                    </label>
                     <input
                       id="variante_titulo_seo"
                       name="titulo_seo"
                       type="text"
                       class="form-control"
                       maxlength="150"
+                      aria-describedby="ayudaTituloSeo contadorTituloSeo"
                       placeholder="Se genera automáticamente si lo dejas vacío"
                     >
-                    <div class="campo-ayuda mt-1">
-                      Máximo 150 caracteres. Ideal: 60-75 caracteres.
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-1 mt-1">
+                      <div id="ayudaTituloSeo" class="campo-ayuda">
+                        Máximo 150 caracteres. Ideal visible: 60 a 75 caracteres.
+                      </div>
+                      <div id="contadorTituloSeo" class="campo-ayuda text-md-end">
+                        0/150
+                      </div>
                     </div>
                   </div>
 
                   <div class="col-12">
-                    <label for="variante_resumen_seo" class="form-label">Resumen SEO</label>
+                    <label for="variante_resumen_seo" class="form-label">
+                      Resumen SEO
+                    </label>
                     <input
                       id="variante_resumen_seo"
                       name="resumen_seo"
                       type="text"
                       class="form-control"
                       maxlength="255"
-                      placeholder="Descripción corta para Google y resultados internos"
+                      aria-describedby="ayudaResumenSeo contadorResumenSeo"
+                      placeholder="Resumen breve para buscadores y resultados internos"
                     >
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-1 mt-1">
+                      <div id="ayudaResumenSeo" class="campo-ayuda">
+                        Ideal: 140 a 160 caracteres. Puedes editarlo manualmente.
+                      </div>
+                      <div id="contadorResumenSeo" class="campo-ayuda text-md-end">
+                        0/255
+                      </div>
+                    </div>
                   </div>
 
                   <div class="col-12">
-                    <label for="variante_descripcion_merchant" class="form-label">Descripción Merchant</label>
+                    <label for="variante_descripcion_merchant" class="form-label">
+                      Descripción Merchant
+                    </label>
                     <textarea
                       id="variante_descripcion_merchant"
                       name="descripcion_merchant"
                       class="form-control"
                       rows="6"
+                      maxlength="5000"
+                      aria-describedby="ayudaDescripcionMerchant contadorDescripcionMerchant"
                       placeholder="Descripción de la oferta vendible para Merchant Center"
                     ></textarea>
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-1 mt-1">
+                      <div id="ayudaDescripcionMerchant" class="campo-ayuda">
+                        Recomendado: 500 a 1.000 caracteres. Máximo Merchant: 5.000 caracteres.
+                      </div>
+                      <div id="contadorDescripcionMerchant" class="campo-ayuda text-md-end">
+                        0/5000
+                      </div>
+                    </div>
                   </div>
 
                   <div class="col-12">
                     <div class="form-check">
-                      <input id="variante_publicar_merchant" name="publicar_merchant" class="form-check-input" type="checkbox">
+                      <input
+                        id="variante_publicar_merchant"
+                        name="publicar_merchant"
+                        class="form-check-input"
+                        type="checkbox"
+                        aria-describedby="ayudaPublicarMerchant alertaMerchantVariante"
+                      >
                       <label for="variante_publicar_merchant" class="form-check-label">
                         Publicar en Merchant Center
                       </label>
                     </div>
-                    <div class="campo-ayuda mt-1">
+
+                    <div id="ayudaPublicarMerchant" class="campo-ayuda mt-1">
                       Actívalo solo si esta variante debe salir en el feed de Google Merchant Center.
+                    </div>
+
+                    <div id="alertaMerchantVariante" class="alert alert-light border mt-3 mb-0 d-none">
                     </div>
                   </div>
                 </div>
@@ -1030,6 +1118,98 @@
                   </div>
                 </div>
               </div>
+
+              <div
+                class="tab-pane fade"
+                id="panel-variante-imagenes"
+                role="tabpanel"
+                aria-labelledby="tab-variante-imagenes"
+                tabindex="0"
+              >
+                <div class="row g-3">
+                  <div class="col-12">
+                    <div id="alertaImagenesVarianteNueva" class="alert alert-info mb-0">
+                      Guarda primero la variante para poder subir imágenes.
+                    </div>
+                  </div>
+
+                  <div class="col-12" id="contenedorImagenesVariante">
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+                      <div>
+                        <h3 class="h6 mb-1">Imágenes de la variante</h3>
+                        <p class="text-muted small mb-0">
+                          Máximo 7 imágenes por variante. Recomendado: 1200 x 1200 px.
+                          El texto alternativo se genera automáticamente.
+                        </p>
+                      </div>
+
+                      <div id="contadorImagenesVariante" class="badge text-bg-light border align-self-start">
+                        0/7
+                      </div>
+                    </div>
+
+                    <div class="card border mb-3">
+                      <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                          <div class="col-12 col-lg-6">
+                            <label for="imagenVarianteArchivo" class="form-label">
+                              Imagen <span class="text-danger">*</span>
+                            </label>
+                            <input
+                              id="imagenVarianteArchivo"
+                              type="file"
+                              class="form-control"
+                              accept="image/jpeg,image/png,image/webp"
+                              aria-describedby="ayudaImagenVariante"
+                            >
+                          </div>
+
+                          <div class="col-6 col-lg-auto imagen-variante-orden-col">
+                            <label for="imagenVarianteOrden" class="form-label">Orden</label>
+                            <input
+                              id="imagenVarianteOrden"
+                              type="number"
+                              class="form-control input-orden-imagen"
+                              min="1"
+                              max="7"
+                              step="1"
+                            >
+                          </div>
+
+                          <div class="col-6 col-lg-auto imagen-variante-principal-col">
+                            <div class="form-check mb-2">
+                              <input
+                                id="imagenVariantePrincipal"
+                                class="form-check-input"
+                                type="checkbox"
+                              >
+                              <label for="imagenVariantePrincipal" class="form-check-label">
+                                Principal
+                              </label>
+                            </div>
+                          </div>
+
+                          <div class="col-12 col-lg-auto imagen-variante-subir-col">
+                            <button
+                              id="btnSubirImagenVariante"
+                              class="btn btn-outline-primary btn-subir-imagen-variante"
+                              type="button"
+                            >
+                              Subir
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div id="listaImagenesVariante">
+                      <div class="text-muted small">
+                        Esta variante todavía no tiene imágenes.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1037,7 +1217,7 @@
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
               Cancelar
             </button>
-            <button id="btnGuardarVariante" type="submit" class="btn btn-outline-primary">
+            <button id="btnGuardarVariante" type="button" class="btn btn-outline-primary">
               Guardar variante
             </button>
           </div>

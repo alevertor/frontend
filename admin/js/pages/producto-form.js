@@ -1,21 +1,35 @@
 import {
   actualizarConfiguracionProducto,
+  actualizarImagenVariante,
   actualizarProducto,
   actualizarVarianteProducto,
   crearConfiguracionProducto,
   crearProducto,
   crearVarianteProducto,
   desactivarVarianteProducto,
+  eliminarImagenVariante,
   obtenerCategoriasPublicas,
   obtenerConfiguracionesProducto,
   obtenerDetalleProducto,
+  obtenerImagenesVariante,
   obtenerMarcasPublicas,
   obtenerVariantesProducto,
+  subirImagenVariante,
 } from "../api.js";
+
+import {
+  protegerSoloAdmin,
+  aplicarPermisosVisuales,
+  configurarBotonCerrarSesion,
+  iniciarIndicadorSesion,
+  finalizarCargaAdmin,
+} from "../auth.js";
 
 const parametrosUrl = new URLSearchParams(window.location.search);
 const productoIdInicial = parametrosUrl.get("id");
 const varianteIdInicial = parametrosUrl.get("variante_id");
+const URL_BASE_BACKEND = "http://127.0.0.1:8000";
+const MAXIMO_IMAGENES_VARIANTE = 7;
 
 const estado = {
   productoId: productoIdInicial ? Number(productoIdInicial) : null,
@@ -26,11 +40,13 @@ const estado = {
 
   varianteIdDesdeUrl: varianteIdInicial ? Number(varianteIdInicial) : null,
   varianteIdPendienteEnfoque: varianteIdInicial ? Number(varianteIdInicial) : null,
+
+  imagenesVariante: [],
+  imagenesVarianteCargando: false,
+  imagenPendienteEliminarId: null,
 };
 
 const elementos = {
-  btnCerrarSesion: document.getElementById("btnCerrarSesion"),
-
   btnEditarProducto: document.getElementById("btnEditarProducto"),
   btnNuevaConfiguracion: document.getElementById("btnNuevaConfiguracion"),
   btnNuevaVariante: document.getElementById("btnNuevaVariante"),
@@ -63,6 +79,25 @@ const elementos = {
   grupoTipoVarianteCulatas: document.getElementById("grupo-variante-principal-culatas"),
   grupoTipoVarianteAuto: document.getElementById("grupo-variante-principal-auto"),
 
+  inputTituloSeo: document.getElementById("variante_titulo_seo"),
+  inputResumenSeo: document.getElementById("variante_resumen_seo"),
+  inputDescripcionMerchant: document.getElementById("variante_descripcion_merchant"),
+  inputPublicarMerchant: document.getElementById("variante_publicar_merchant"),
+
+  contadorTituloSeo: document.getElementById("contadorTituloSeo"),
+  contadorResumenSeo: document.getElementById("contadorResumenSeo"),
+  contadorDescripcionMerchant: document.getElementById("contadorDescripcionMerchant"),
+  alertaMerchantVariante: document.getElementById("alertaMerchantVariante"),
+
+  alertaImagenesVarianteNueva: document.getElementById("alertaImagenesVarianteNueva"),
+  contenedorImagenesVariante: document.getElementById("contenedorImagenesVariante"),
+  contadorImagenesVariante: document.getElementById("contadorImagenesVariante"),
+  inputImagenVarianteArchivo: document.getElementById("imagenVarianteArchivo"),
+  inputImagenVarianteOrden: document.getElementById("imagenVarianteOrden"),
+  inputImagenVariantePrincipal: document.getElementById("imagenVariantePrincipal"),
+  btnSubirImagenVariante: document.getElementById("btnSubirImagenVariante"),
+  listaImagenesVariante: document.getElementById("listaImagenesVariante"),
+
   modalConfirmarDesactivarVariante: document.getElementById("modalConfirmarDesactivarVariante"),
   textoConfirmarEstadoVariante: document.getElementById("textoConfirmarEstadoVariante"),
   btnConfirmarDesactivarVariante: document.getElementById("btnConfirmarDesactivarVariante"),
@@ -70,22 +105,28 @@ const elementos = {
   contenedorToast: document.getElementById("contenedorToast"),
 };
 
-const modalProducto = new bootstrap.Modal(elementos.modalProducto);
-const modalConfiguracion = new bootstrap.Modal(elementos.modalConfiguracion);
-const modalVariante = new bootstrap.Modal(elementos.modalVariante);
-const modalConfirmarDesactivarVariante = new bootstrap.Modal(
-  elementos.modalConfirmarDesactivarVariante
-);
+let modalProducto = null;
+let modalConfiguracion = null;
+let modalVariante = null;
+let modalConfirmarDesactivarVariante = null;
 
 document.addEventListener("DOMContentLoaded", iniciarPagina);
 
 async function iniciarPagina() {
-  if (!validarSesion()) return;
-
-  registrarEventos();
-  prepararEstilosEnfoqueVariante();
+  if (!protegerSoloAdmin()) {
+    finalizarCargaAdmin();
+    return;
+  }
 
   try {
+    aplicarPermisosVisuales();
+    configurarBotonCerrarSesion();
+    iniciarIndicadorSesion();
+
+    inicializarModales();
+    registrarEventos();
+    prepararEstilosEnfoqueVariante();
+
     await cargarCatalogos();
 
     if (estado.productoId) {
@@ -98,33 +139,37 @@ async function iniciarPagina() {
     }
   } catch (error) {
     mostrarToast(error.message, "danger");
+  } finally {
+    finalizarCargaAdmin();
   }
 }
 
-function validarSesion() {
-  const token = localStorage.getItem("token_acceso");
-
-  if (!token) {
-    window.location.href = "./login.html";
-    return false;
-  }
-
-  return true;
+function inicializarModales() {
+  modalProducto = new bootstrap.Modal(elementos.modalProducto);
+  modalConfiguracion = new bootstrap.Modal(elementos.modalConfiguracion);
+  modalVariante = new bootstrap.Modal(elementos.modalVariante);
+  modalConfirmarDesactivarVariante = new bootstrap.Modal(
+    elementos.modalConfirmarDesactivarVariante
+  );
 }
 
 function registrarEventos() {
-  elementos.btnCerrarSesion?.addEventListener("click", () => {
-    localStorage.removeItem("token_acceso");
-    window.location.href = "./login.html";
-  });
-
   elementos.btnEditarProducto?.addEventListener("click", abrirModalEditarProducto);
   elementos.btnNuevaConfiguracion?.addEventListener("click", abrirModalNuevaConfiguracion);
   elementos.btnNuevaVariante?.addEventListener("click", abrirModalNuevaVariante);
 
   elementos.formProducto.addEventListener("submit", guardarProducto);
   elementos.formConfiguracion.addEventListener("submit", guardarConfiguracion);
-  elementos.formVariante.addEventListener("submit", guardarVariante);
+  elementos.formVariante.addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  evento.stopPropagation();
+  });
+
+  document.getElementById("btnGuardarVariante")?.addEventListener("click", (evento) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+    guardarVariante(evento);
+  });
 
   elementos.listaConfiguraciones.addEventListener("click", manejarAccionesConfiguracion);
   elementos.listaVariantes.addEventListener("click", manejarAccionesVariante);
@@ -134,40 +179,106 @@ function registrarEventos() {
     confirmarCambioEstadoVariante
   );
 
+  elementos.btnSubirImagenVariante?.addEventListener("click", (evento) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+    subirImagenVarianteDesdeFormulario(evento);
+  });
+
+  elementos.listaImagenesVariante?.addEventListener(
+    "click",
+    manejarAccionesImagenVariante
+  );
+
   [
     "categoria_id",
     "marca_ids",
     "motor",
     "cilindraje",
     "tipo_combustible",
+    "numero_cilindros",
+    "numero_valvulas",
+    "material",
+    "vehiculos_compatibles",
+    "garantia_tiempo",
   ].forEach((id) => {
     document.getElementById(id)?.addEventListener("input", () => {
       aplicarTipoDetectadoDesdeCategoria();
       autogenerarSlug();
+      autogenerarCamposVariante();
+      actualizarEstadoMerchant();
     });
 
     document.getElementById(id)?.addEventListener("change", () => {
       aplicarTipoDetectadoDesdeCategoria();
       actualizarControlTipoComercialVariante();
       autogenerarSlug();
+      autogenerarCamposVariante();
+      actualizarEstadoMerchant();
     });
   });
 
-  document.getElementById("nombre")?.addEventListener("input", autogenerarSlug);
+  document.getElementById("nombre")?.addEventListener("input", () => {
+    autogenerarSlug();
+    autogenerarCamposVariante();
+    actualizarEstadoMerchant();
+  });
+
+  document.getElementById("referencia_original")?.addEventListener("input", () => {
+    autogenerarCamposVariante();
+    actualizarEstadoMerchant();
+  });
 
   elementos.selectTipoVariante?.addEventListener("change", () => {
     sincronizarTipoComercialVariante();
     autogenerarCamposVariante();
+    actualizarEstadoMerchant();
   });
 
   [
     "variante_configuracion_id",
     "variante_marca_repuesto",
     "variante_referencia_oem",
+    "variante_incluye",
+    "variante_paquete",
+    "variante_condicion",
   ].forEach((id) => {
-    document.getElementById(id)?.addEventListener("input", autogenerarCamposVariante);
-    document.getElementById(id)?.addEventListener("change", autogenerarCamposVariante);
+    document.getElementById(id)?.addEventListener("input", () => {
+      autogenerarCamposVariante();
+      actualizarEstadoMerchant();
+    });
+
+    document.getElementById(id)?.addEventListener("change", () => {
+      autogenerarCamposVariante();
+      actualizarEstadoMerchant();
+    });
   });
+
+  [
+    "variante_titulo_seo",
+    "variante_resumen_seo",
+    "variante_descripcion_merchant",
+  ].forEach((id) => {
+    const campo = document.getElementById(id);
+
+    campo?.addEventListener("input", () => {
+      campo.dataset.autoGenerado = "false";
+      actualizarContadoresSeoMerchant();
+      actualizarEstadoMerchant();
+    });
+  });
+
+  [
+    "variante_nombre",
+    "variante_precio",
+    "variante_stock",
+    "variante_stock_minimo",
+  ].forEach((id) => {
+    document.getElementById(id)?.addEventListener("input", actualizarEstadoMerchant);
+    document.getElementById(id)?.addEventListener("change", actualizarEstadoMerchant);
+  });
+
+  elementos.inputPublicarMerchant?.addEventListener("change", actualizarEstadoMerchant);
 }
 
 async function cargarCatalogos() {
@@ -214,7 +325,6 @@ async function cargarProductoCompleto() {
 
 function renderizarVistaProducto(producto) {
   setTexto("vistaNombreProducto", producto.nombre || "—");
-
   setTexto("vistaCategoria", producto.categoria_nombre || "—");
 
   setTexto(
@@ -225,7 +335,6 @@ function renderizarVistaProducto(producto) {
   );
 
   setTexto("vistaTipoRepuesto", capitalizar(producto.tipo_repuesto || "—"));
-
   setTexto("vistaReferenciaOriginal", producto.referencia_original || "—");
 
   setTexto("vistaMotor", producto.motor || "—");
@@ -651,7 +760,13 @@ function abrirModalNuevaVariante() {
   activarTabVariante("tab-variante-operacion");
 
   elementos.tituloModalVariante.textContent = "Nueva variante";
+
+  inicializarCamposSeoAutogenerables(true);
   autogenerarCamposVariante();
+  actualizarContadoresSeoMerchant();
+  actualizarEstadoMerchant();
+
+  limpiarGestionImagenesVariante();
 
   modalVariante.show();
 }
@@ -699,7 +814,15 @@ function abrirModalEditarVariante(varianteId) {
 
   activarTabVariante("tab-variante-operacion");
 
+  inicializarCamposSeoAutogenerables(false);
+  actualizarContadoresSeoMerchant();
+  actualizarEstadoMerchant();
+
   elementos.tituloModalVariante.textContent = "Editar variante";
+
+  limpiarGestionImagenesVariante(variante.id);
+  cargarImagenesVariante(variante.id);
+
   modalVariante.show();
 }
 
@@ -715,6 +838,19 @@ async function guardarVariante(evento) {
     const varianteId = obtenerValor("variante_id");
 
     sincronizarTipoComercialVariante();
+
+    const validacion = validarVarianteAntesDeGuardar();
+
+    if (!validacion.valida) {
+      if (validacion.tab === "seo") {
+        activarTabVariante("tab-variante-seo");
+      } else {
+        activarTabVariante("tab-variante-operacion");
+      }
+
+      mostrarToast(validacion.mensaje, "warning");
+      return;
+    }
 
     const payload = {
       producto_id: estado.productoId,
@@ -765,6 +901,389 @@ async function guardarVariante(evento) {
   } catch (error) {
     mostrarToast(error.message, "danger");
   }
+}
+
+function limpiarGestionImagenesVariante(varianteId = null) {
+  estado.imagenesVariante = [];
+  estado.imagenPendienteEliminarId = null;
+
+  limpiarFormularioImagenVariante();
+
+  if (!elementos.alertaImagenesVarianteNueva || !elementos.contenedorImagenesVariante) {
+    return;
+  }
+
+  if (!varianteId) {
+    elementos.alertaImagenesVarianteNueva.classList.remove("d-none");
+    elementos.contenedorImagenesVariante.classList.add("d-none");
+    renderizarImagenesVariante();
+    return;
+  }
+
+  elementos.alertaImagenesVarianteNueva.classList.add("d-none");
+  elementos.contenedorImagenesVariante.classList.remove("d-none");
+  renderizarImagenesVariante();
+}
+
+async function cargarImagenesVariante(varianteId) {
+  if (!varianteId) return;
+
+  try {
+    estado.imagenesVarianteCargando = true;
+    renderizarImagenesVariante();
+
+    estado.imagenesVariante = await obtenerImagenesVariante(varianteId);
+    renderizarImagenesVariante();
+  } catch (error) {
+    mostrarToast(error.message, "danger");
+  } finally {
+    estado.imagenesVarianteCargando = false;
+    renderizarImagenesVariante();
+  }
+}
+
+function renderizarImagenesVariante() {
+  if (elementos.contadorImagenesVariante) {
+    elementos.contadorImagenesVariante.textContent =
+      `${estado.imagenesVariante.length}/${MAXIMO_IMAGENES_VARIANTE}`;
+  }
+
+  if (!elementos.listaImagenesVariante) return;
+
+  const varianteId = obtenerValor("variante_id");
+
+  if (!varianteId) {
+    elementos.listaImagenesVariante.innerHTML = `
+      <div class="text-muted small">
+        Guarda primero la variante para poder subir imágenes.
+      </div>
+    `;
+    actualizarEstadoBotonSubirImagen();
+    return;
+  }
+
+  if (estado.imagenesVarianteCargando) {
+    elementos.listaImagenesVariante.innerHTML = `
+      <div class="text-muted small">
+        Cargando imágenes...
+      </div>
+    `;
+    actualizarEstadoBotonSubirImagen();
+    return;
+  }
+
+  if (!estado.imagenesVariante.length) {
+    elementos.listaImagenesVariante.innerHTML = `
+      <div class="text-muted small">
+        Esta variante todavía no tiene imágenes.
+      </div>
+    `;
+    actualizarEstadoBotonSubirImagen();
+    return;
+  }
+
+  elementos.listaImagenesVariante.innerHTML = `
+    <div class="row g-3">
+      ${estado.imagenesVariante.map(construirTarjetaImagenVariante).join("")}
+    </div>
+  `;
+
+  actualizarEstadoBotonSubirImagen();
+}
+
+function construirTarjetaImagenVariante(imagen) {
+  const url = construirUrlImagen(imagen.url_imagen);
+  const alt = imagen.texto_alternativo || "Imagen de variante";
+  const esperandoConfirmacion = estado.imagenPendienteEliminarId === imagen.id;
+
+  const textoPrincipal = imagen.es_principal
+    ? '<span class="badge text-bg-primary">Principal</span>'
+    : '<span class="badge text-bg-light border">Galería</span>';
+
+  return `
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card h-100">
+        <div class="imagen-variante-preview">
+          <img
+            src="${escaparHtml(url)}"
+            alt="${escaparHtml(alt)}"
+            loading="lazy"
+          >
+        </div>
+
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+              ${textoPrincipal}
+              <span class="badge text-bg-light border">Orden ${imagen.orden}</span>
+            </div>
+          </div>
+
+          <div class="small text-muted mb-2">
+            ${escaparHtml(imagen.texto_alternativo || "Alt automático pendiente")}
+          </div>
+
+          ${
+            esperandoConfirmacion
+              ? `
+                <div class="alert alert-warning py-2 px-3 mb-0">
+                  <div class="small mb-2">
+                    ¿Eliminar esta imagen de la variante?
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2">
+                    <button
+                      class="btn btn-outline-danger btn-sm"
+                      type="button"
+                      data-accion-imagen="confirmar-eliminar"
+                      data-id="${imagen.id}"
+                    >
+                      Sí, eliminar
+                    </button>
+
+                    <button
+                      class="btn btn-outline-secondary btn-sm"
+                      type="button"
+                      data-accion-imagen="cancelar-eliminar"
+                      data-id="${imagen.id}"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              `
+              : `
+                <div class="d-flex flex-wrap gap-2">
+                  ${
+                    imagen.es_principal
+                      ? ""
+                      : `
+                        <button
+                          class="btn btn-outline-primary btn-sm"
+                          type="button"
+                          data-accion-imagen="principal"
+                          data-id="${imagen.id}"
+                        >
+                          Marcar principal
+                        </button>
+                      `
+                  }
+
+                  <button
+                    class="btn btn-outline-danger btn-sm"
+                    type="button"
+                    data-accion-imagen="eliminar"
+                    data-id="${imagen.id}"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              `
+          }
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function actualizarEstadoBotonSubirImagen() {
+  if (!elementos.btnSubirImagenVariante) return;
+
+  const varianteId = obtenerValor("variante_id");
+  const limiteAlcanzado = estado.imagenesVariante.length >= MAXIMO_IMAGENES_VARIANTE;
+
+  elementos.btnSubirImagenVariante.disabled = !varianteId || limiteAlcanzado;
+
+  if (!varianteId) {
+    elementos.btnSubirImagenVariante.textContent = "Guarda primero";
+    return;
+  }
+
+  if (limiteAlcanzado) {
+    elementos.btnSubirImagenVariante.textContent = "Máximo 7";
+    return;
+  }
+
+  elementos.btnSubirImagenVariante.textContent = "Subir";
+}
+
+async function subirImagenVarianteDesdeFormulario(evento) {
+  evento?.preventDefault();
+  evento?.stopPropagation();
+
+  const varianteId = obtenerValor("variante_id");
+
+  if (!varianteId) {
+    mostrarToast("Guarda primero la variante antes de subir imágenes.", "warning");
+    return;
+  }
+
+  if (estado.imagenesVariante.length >= MAXIMO_IMAGENES_VARIANTE) {
+    mostrarToast("La variante ya tiene el máximo de 7 imágenes.", "warning");
+    return;
+  }
+
+  const archivo = elementos.inputImagenVarianteArchivo?.files?.[0];
+
+  if (!archivo) {
+    mostrarToast("Selecciona una imagen para subir.", "warning");
+    return;
+  }
+
+  const tiposPermitidos = ["image/jpeg", "image/png", "image/webp"];
+
+  if (!tiposPermitidos.includes(archivo.type)) {
+    mostrarToast("Formato no permitido. Usa JPG, PNG o WEBP.", "warning");
+    return;
+  }
+
+  const tamanoMaximo = 5 * 1024 * 1024;
+
+  if (archivo.size > tamanoMaximo) {
+    mostrarToast("La imagen supera el tamaño máximo de 5 MB.", "warning");
+    return;
+  }
+
+  const ordenValor = obtenerValor("imagenVarianteOrden");
+  const orden = ordenValor ? Number(ordenValor) : null;
+
+  if (orden !== null && (!Number.isInteger(orden) || orden < 1 || orden > 7)) {
+    mostrarToast("El orden debe estar entre 1 y 7.", "warning");
+    return;
+  }
+
+  try {
+    alternarSubiendoImagen(true);
+
+    await subirImagenVariante(Number(varianteId), {
+      archivo,
+      texto_alternativo: null,
+      orden,
+      es_principal: obtenerCheck("imagenVariantePrincipal"),
+    });
+
+    mostrarToast("Imagen subida correctamente.", "success");
+    limpiarFormularioImagenVariante();
+
+    await cargarImagenesVariante(Number(varianteId));
+
+    activarTabVariante("tab-variante-imagenes");
+    modalVariante.show();
+  } catch (error) {
+    mostrarToast(error.message, "danger");
+  } finally {
+    alternarSubiendoImagen(false);
+  }
+}
+
+function manejarAccionesImagenVariante(evento) {
+  evento.preventDefault();
+  evento.stopPropagation();
+
+  const boton = evento.target.closest("[data-accion-imagen]");
+
+  if (!boton) return;
+
+  const accion = boton.dataset.accionImagen;
+  const imagenId = Number(boton.dataset.id);
+
+  if (accion === "principal") {
+    marcarImagenVarianteComoPrincipal(imagenId);
+    return;
+  }
+
+  if (accion === "eliminar") {
+    estado.imagenPendienteEliminarId = imagenId;
+    renderizarImagenesVariante();
+    return;
+  }
+
+  if (accion === "cancelar-eliminar") {
+    estado.imagenPendienteEliminarId = null;
+    renderizarImagenesVariante();
+    return;
+  }
+
+  if (accion === "confirmar-eliminar") {
+    eliminarImagenVarianteActual(imagenId);
+  }
+}
+
+async function marcarImagenVarianteComoPrincipal(imagenId) {
+  const varianteId = Number(obtenerValor("variante_id"));
+
+  if (!varianteId) return;
+
+  try {
+    await actualizarImagenVariante(imagenId, {
+      es_principal: true,
+    });
+
+    mostrarToast("Imagen principal actualizada.", "success");
+    await cargarImagenesVariante(varianteId);
+  } catch (error) {
+    mostrarToast(error.message, "danger");
+  }
+}
+
+async function eliminarImagenVarianteActual(imagenId) {
+  const varianteId = Number(obtenerValor("variante_id"));
+
+  if (!varianteId) return;
+
+  try {
+    await eliminarImagenVariante(imagenId);
+
+    estado.imagenPendienteEliminarId = null;
+
+    mostrarToast("Imagen eliminada correctamente.", "success");
+
+    await cargarImagenesVariante(varianteId);
+
+    activarTabVariante("tab-variante-imagenes");
+    modalVariante.show();
+  } catch (error) {
+    mostrarToast(error.message, "danger");
+  }
+}
+
+function limpiarFormularioImagenVariante() {
+  if (elementos.inputImagenVarianteArchivo) {
+    elementos.inputImagenVarianteArchivo.value = "";
+  }
+
+  if (elementos.inputImagenVarianteOrden) {
+    elementos.inputImagenVarianteOrden.value = "";
+  }
+
+  if (elementos.inputImagenVariantePrincipal) {
+    elementos.inputImagenVariantePrincipal.checked = false;
+  }
+
+  actualizarEstadoBotonSubirImagen();
+}
+
+function alternarSubiendoImagen(subiendo) {
+  if (!elementos.btnSubirImagenVariante) return;
+
+  elementos.btnSubirImagenVariante.disabled = subiendo;
+
+  if (subiendo) {
+    elementos.btnSubirImagenVariante.textContent = "Subiendo...";
+    return;
+  }
+
+  actualizarEstadoBotonSubirImagen();
+}
+
+function construirUrlImagen(urlImagen) {
+  if (!urlImagen) return "";
+
+  if (String(urlImagen).startsWith("http")) {
+    return urlImagen;
+  }
+
+  return `${URL_BASE_BACKEND}${urlImagen}`;
 }
 
 function prepararEstilosEnfoqueVariante() {
@@ -886,6 +1405,7 @@ function construirFilaVariante(variante) {
       <td>${escaparHtml(variante.ubicacion || "—")}</td>
       <td>
         ${variante.activa ? '<span class="badge text-bg-success">Activa</span>' : '<span class="badge text-bg-secondary">Inactiva</span>'}
+        ${variante.publicar_merchant ? '<span class="badge text-bg-info ms-1">Merchant</span>' : ""}
       </td>
       <td class="text-end">
         <div class="btn-group btn-group-sm">
@@ -1020,17 +1540,19 @@ function autogenerarSlug() {
 function autogenerarCamposVariante() {
   sincronizarTipoComercialVariante();
 
-  const productoNombre = obtenerValor("nombre") || estado.producto?.nombre || "";
   const tipoComercial = obtenerValor("variante_principal");
   const configuracionNombre = obtenerNombreConfiguracionSeleccionada();
   const marcaRepuesto = obtenerValor("variante_marca_repuesto");
-  const referenciaOem = obtenerValor("variante_referencia_oem");
+  const referenciaOem =
+    obtenerValor("variante_referencia_oem") ||
+    estado.producto?.referencia_original ||
+    obtenerValor("referencia_original");
 
-  const titulo = construirTituloVariante(productoNombre, tipoComercial, configuracionNombre);
+  const titulo = construirTituloVariante(tipoComercial, configuracionNombre);
   const slug = construirSlugVariante(tipoComercial, configuracionNombre);
 
-  if (!obtenerValor("variante_titulo_seo")) {
-    setValor("variante_titulo_seo", titulo.slice(0, 150));
+  if (debeAutogenerarCampo("variante_titulo_seo")) {
+    setValorAutogenerado("variante_titulo_seo", titulo.slice(0, 150));
   }
 
   const varianteId = obtenerValor("variante_id");
@@ -1040,25 +1562,102 @@ function autogenerarCamposVariante() {
     setValor("variante_slug", slug.slice(0, 220));
   }
 
-  if (!obtenerValor("variante_resumen_seo") && titulo) {
-    const resumen = construirResumenVariante(titulo, marcaRepuesto, referenciaOem);
-    setValor("variante_resumen_seo", resumen.slice(0, 255));
+  if (debeAutogenerarCampo("variante_resumen_seo")) {
+    const resumen = construirResumenSeoVariante({
+      tipoComercial,
+      configuracionNombre,
+      marcaRepuesto,
+      referenciaOem,
+    });
+
+    setValorAutogenerado("variante_resumen_seo", resumen.slice(0, 255));
   }
+
+  if (debeAutogenerarCampo("variante_descripcion_merchant")) {
+    const descripcion = construirDescripcionMerchantVariante({
+      tipoComercial,
+      configuracionNombre,
+      marcaRepuesto,
+      referenciaOem,
+    });
+
+    setValorAutogenerado("variante_descripcion_merchant", descripcion.slice(0, 5000));
+  }
+
+  actualizarContadoresSeoMerchant();
 }
 
-function construirTituloVariante(productoNombre, tipoComercial, configuracionNombre) {
-  const partes = [];
+function obtenerTipoComercialDiferente(tipoComercial, tipoRepuesto) {
+  const comercial = String(tipoComercial || "").trim();
+  const repuesto = String(tipoRepuesto || "").trim();
 
-  if (productoNombre) partes.push(productoNombre);
-  if (tipoComercial) partes.push(tipoComercial);
-  if (configuracionNombre) partes.push(configuracionNombre);
+  if (!comercial) return "";
 
-  return partes.join(" ").trim();
+  if (normalizarTextoBase(comercial) === normalizarTextoBase(repuesto)) {
+    return "";
+  }
+
+  return comercial;
+}
+
+function agregarParteSlugSinDuplicar(partes, valor) {
+  const slug = convertirSlug(valor);
+
+  if (!slug) return;
+
+  if (partes.includes(slug)) return;
+
+  partes.push(slug);
+}
+
+function construirTituloVariante(tipoComercial, configuracionNombre) {
+  const nombreProducto = obtenerValor("nombre") || estado.producto?.nombre || "";
+  const tipoRepuesto = obtenerValor("tipo_repuesto") || estado.producto?.tipo_repuesto || "";
+  const tipoComercialTexto = obtenerTipoComercialDiferente(tipoComercial, tipoRepuesto);
+
+  if (nombreProducto && tipoRepuesto && tipoComercialTexto) {
+    const regexTipo = new RegExp(`^(${escaparRegex(tipoRepuesto)})\\b`, "i");
+
+    if (regexTipo.test(nombreProducto)) {
+      const titulo = nombreProducto.replace(regexTipo, (coincidencia) => {
+        return `${capitalizar(coincidencia)} ${capitalizar(tipoComercialTexto)}`;
+      });
+
+      return limpiarTextoSeo(
+        configuracionNombre
+          ? `${titulo} ${configuracionNombre}`
+          : titulo
+      );
+    }
+  }
+
+  if (nombreProducto) {
+    const partes = [nombreProducto];
+
+    if (tipoComercialTexto) partes.push(capitalizar(tipoComercialTexto));
+    if (configuracionNombre) partes.push(configuracionNombre);
+
+    return limpiarTextoSeo(partes.join(" "));
+  }
+
+  return limpiarTextoSeo(
+    [
+      capitalizar(tipoRepuesto),
+      tipoComercialTexto ? capitalizar(tipoComercialTexto) : "",
+      configuracionNombre,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+}
+
+function escaparRegex(valor) {
+  return String(valor || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function construirSlugProductoTecnico() {
   const tipoRepuesto = obtenerValor("tipo_repuesto") || detectarTipoRepuestoDesdeCategoria();
-  const marcaPrincipal = obtenerMarcaPrincipalSeleccionada();
+  const marcas = obtenerMarcasSeleccionadasTexto();
   const cilindraje = obtenerValor("cilindraje");
   const motor = obtenerValor("motor");
   const combustible = obtenerValor("tipo_combustible");
@@ -1066,8 +1665,7 @@ function construirSlugProductoTecnico() {
   const partes = [];
 
   if (tipoRepuesto) partes.push(tipoRepuesto);
-  partes.push("para motor");
-  if (marcaPrincipal) partes.push(marcaPrincipal);
+  if (marcas) partes.push(marcas);
   if (cilindraje) partes.push(cilindraje);
   if (motor) partes.push(motor);
   if (combustible) partes.push(combustible);
@@ -1081,18 +1679,436 @@ function construirSlugProductoTecnico() {
 }
 
 function construirSlugVariante(tipoComercial, configuracionNombre) {
+  const tipoRepuesto = obtenerValor("tipo_repuesto") || estado.producto?.tipo_repuesto || "";
+
   const slugProducto =
     obtenerValor("slug") ||
     estado.producto?.slug ||
     construirSlugProductoTecnico() ||
     convertirSlug(obtenerValor("nombre") || estado.producto?.nombre || "");
 
-  const partes = [slugProducto];
+  const partes = [slugProducto].filter(Boolean);
+  const tipoComercialDiferente = obtenerTipoComercialDiferente(tipoComercial, tipoRepuesto);
 
-  if (tipoComercial) partes.push(convertirSlug(tipoComercial));
-  if (configuracionNombre) partes.push(convertirSlug(configuracionNombre));
+  agregarParteSlugSinDuplicar(partes, tipoComercialDiferente);
+  agregarParteSlugSinDuplicar(partes, configuracionNombre);
 
   return partes.filter(Boolean).join("-");
+}
+
+function construirResumenSeoVariante({
+  tipoComercial,
+  configuracionNombre,
+  marcaRepuesto,
+  referenciaOem,
+}) {
+  const tipoRepuesto = obtenerValor("tipo_repuesto") || estado.producto?.tipo_repuesto || "";
+  const vehiculos = obtenerVehiculosCompatiblesCortos(4);
+  const cilindraje = obtenerValor("cilindraje") || estado.producto?.cilindraje || "";
+  const combustible = obtenerValor("tipo_combustible") || estado.producto?.tipo_combustible || "";
+  const motor = obtenerValor("motor") || estado.producto?.motor || "";
+
+  const partes = [];
+
+  const tipoComercialDiferente = obtenerTipoComercialDiferente(tipoComercial, tipoRepuesto);
+
+  if (tipoRepuesto) partes.push(capitalizar(tipoRepuesto));
+  if (tipoComercialDiferente) partes.push(String(tipoComercialDiferente).toLowerCase());
+  if (vehiculos) partes.push(vehiculos);
+  //if (cilindraje) partes.push(cilindraje);
+  if (combustible) partes.push(capitalizar(combustible));
+  if (motor) partes.push(motor);
+  if (configuracionNombre) partes.push(configuracionNombre);
+  if (referenciaOem) partes.push(referenciaOem);
+
+  let resumen = limpiarTextoSeo(partes.filter(Boolean).join(" "));
+
+  if (marcaRepuesto) {
+    resumen += ` marca ${marcaRepuesto}`;
+  }
+
+  return `${resumen}.`.replace(/\s+\./g, ".");
+}
+
+function construirDescripcionMerchantVariante({
+  tipoComercial,
+  configuracionNombre,
+  marcaRepuesto,
+  referenciaOem,
+}) {
+  const tipoRepuesto = obtenerValor("tipo_repuesto") || estado.producto?.tipo_repuesto || "";
+  const vehiculos = obtenerVehiculosCompatiblesCortos(5);
+  const cilindraje = obtenerValor("cilindraje") || estado.producto?.cilindraje || "";
+  const combustible = obtenerValor("tipo_combustible") || estado.producto?.tipo_combustible || "";
+  const motor = obtenerValor("motor") || estado.producto?.motor || "";
+  const cilindros = obtenerValor("numero_cilindros") || estado.producto?.numero_cilindros || "";
+  const valvulas = obtenerValor("numero_valvulas") || estado.producto?.numero_valvulas || "";
+  const material = obtenerValor("material") || estado.producto?.material || "";
+  const garantia = obtenerValor("garantia_tiempo") || estado.producto?.garantia_tiempo || "";
+  const condicion = obtenerValor("variante_condicion") || "nuevo";
+
+  const incluye =
+    limpiarListaComoFrase(obtenerValor("variante_incluye")) ||
+    limpiarListaComoFrase(obtenerValor("variante_nombre"));
+
+  const paquete = limpiarListaComoFrase(obtenerValor("variante_paquete"));
+
+  const tipoComercialDiferente = obtenerTipoComercialDiferente(tipoComercial, tipoRepuesto);
+
+  const nombreBase = [
+    tipoRepuesto,
+    tipoComercialDiferente ? String(tipoComercialDiferente).toLowerCase() : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const frases = [];
+
+  if (nombreBase) {
+    frases.push(`Compra ${nombreBase}.`);
+  }
+
+  const detallesProducto = [];
+
+  detallesProducto.push(`Producto ${condicion}`);
+
+  if (marcaRepuesto) {
+    detallesProducto.push(`marca ${marcaRepuesto}`);
+  }
+
+  if (material) {
+    detallesProducto.push(`en ${material.toLowerCase()}`);
+  }
+
+  if (detallesProducto.length) {
+    frases.push(`${limpiarTextoSeo(detallesProducto.join(" "))}.`);
+  }
+
+  if (vehiculos) {
+    frases.push(`Compatible con ${vehiculos}.`);
+  }
+
+  const aplicacionTecnica = [];
+
+  if (motor) aplicacionTecnica.push(`motor ${motor}`);
+  if (cilindraje) aplicacionTecnica.push(cilindraje);
+  if (combustible) aplicacionTecnica.push(capitalizar(combustible));
+  if (cilindros) aplicacionTecnica.push(`${cilindros} cilindros`);
+  if (valvulas) aplicacionTecnica.push(`${valvulas} válvulas`);
+
+  if (aplicacionTecnica.length) {
+    frases.push(`Aplicación técnica: ${aplicacionTecnica.join(", ")}.`);
+  }
+
+  if (configuracionNombre) {
+    frases.push(`Configuración ${configuracionNombre}.`);
+  }
+
+  if (referenciaOem) {
+    frases.push(`Referencia OEM ${referenciaOem}.`);
+  }
+
+  if (incluye) {
+    frases.push(`Incluye ${incluye}.`);
+  }
+
+  if (paquete) {
+    frases.push(`Paquete: ${paquete}.`);
+  }
+
+  if (garantia) {
+    frases.push(`Cuenta con garantía de ${garantia}.`);
+  }
+
+  frases.push("Verifica compatibilidad por motor, modelo, año y referencia antes de comprar.");
+  frases.push("Disponible para cotización por WhatsApp y envío en Colombia.");
+
+  return limpiarTextoSeo(frases.join(" "));
+}
+
+function obtenerVehiculosCompatiblesCortos(maximo = 2) {
+  const texto =
+    obtenerValor("vehiculos_compatibles") ||
+    estado.producto?.vehiculos_compatibles ||
+    "";
+
+  if (!texto) {
+    return obtenerMarcasSeleccionadasTexto();
+  }
+
+  const lineas = String(texto)
+    .split("\n")
+    .map((linea) => linea.replace(/^-\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, maximo);
+
+  if (!lineas.length) {
+    return obtenerMarcasSeleccionadasTexto();
+  }
+
+  return lineas.join(", ");
+}
+
+function limpiarListaComoFrase(valor) {
+  return String(valor || "")
+    .split("\n")
+    .map((linea) => linea.replace(/^-\s*/, "").trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+function limpiarTextoSeo(valor) {
+  return String(valor || "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+,/g, ",")
+    .replace(/\s+\./g, ".")
+    .trim();
+}
+
+function actualizarContadoresSeoMerchant() {
+  actualizarContadorCampo(
+    elementos.inputTituloSeo,
+    elementos.contadorTituloSeo,
+    150,
+    60,
+    75
+  );
+
+  actualizarContadorCampo(
+    elementos.inputResumenSeo,
+    elementos.contadorResumenSeo,
+    255,
+    140,
+    160
+  );
+
+  actualizarContadorCampo(
+    elementos.inputDescripcionMerchant,
+    elementos.contadorDescripcionMerchant,
+    5000,
+    500,
+    1000
+  );
+}
+
+function actualizarContadorCampo(input, contador, maximo, idealMinimo, idealMaximo) {
+  if (!input || !contador) return;
+
+  const longitud = input.value.length;
+
+  contador.textContent = `${longitud}/${maximo}`;
+
+  contador.classList.remove("text-success", "text-warning", "text-danger", "text-muted");
+
+  if (longitud > maximo) {
+    contador.classList.add("text-danger");
+    return;
+  }
+
+  if (longitud >= idealMinimo && longitud <= idealMaximo) {
+    contador.classList.add("text-success");
+    return;
+  }
+
+  if (longitud > 0) {
+    contador.classList.add("text-warning");
+    return;
+  }
+
+  contador.classList.add("text-muted");
+}
+
+function actualizarEstadoMerchant() {
+  if (!elementos.alertaMerchantVariante || !elementos.inputPublicarMerchant) return;
+
+  const publicarMerchant = obtenerCheck("variante_publicar_merchant");
+  const validacion = validarDatosMerchant();
+
+  if (!publicarMerchant) {
+    elementos.alertaMerchantVariante.className = "alert alert-light border mt-3 mb-0 d-none";
+    elementos.alertaMerchantVariante.innerHTML = "";
+    actualizarContadoresSeoMerchant();
+    return;
+  }
+
+  if (validacion.valida) {
+    elementos.alertaMerchantVariante.className = "alert alert-success mt-3 mb-0";
+    elementos.alertaMerchantVariante.innerHTML = `
+      <strong>Lista para Merchant:</strong>
+      esta variante tiene los datos básicos para publicarse en el feed.
+    `;
+  } else {
+    elementos.alertaMerchantVariante.className = "alert alert-warning mt-3 mb-0";
+    elementos.alertaMerchantVariante.innerHTML = `
+      <strong>Faltan datos para Merchant:</strong>
+      <ul class="mb-0 mt-2">
+        ${validacion.errores.map((error) => `<li>${escaparHtml(error)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  actualizarContadoresSeoMerchant();
+}
+
+function validarDatosMerchant() {
+  const errores = [];
+
+  if (!obtenerValor("variante_titulo_seo")) {
+    errores.push("Título SEO / Merchant.");
+  }
+
+  if (!obtenerValor("variante_resumen_seo")) {
+    errores.push("Resumen SEO.");
+  }
+
+  if (!obtenerValor("variante_descripcion_merchant")) {
+    errores.push("Descripción Merchant.");
+  }
+
+  if (!obtenerValor("variante_marca_repuesto")) {
+    errores.push("Marca del repuesto.");
+  }
+
+  if (!obtenerValor("variante_condicion")) {
+    errores.push("Condición.");
+  }
+
+  const precio = Number(obtenerValor("variante_precio"));
+
+  if (!Number.isFinite(precio) || precio <= 0) {
+    errores.push("Precio de venta mayor a cero.");
+  }
+
+  const stock = Number(obtenerValor("variante_stock"));
+
+  if (!Number.isFinite(stock) || stock < 0) {
+    errores.push("Stock válido.");
+  }
+
+  return {
+    valida: errores.length === 0,
+    errores,
+  };
+}
+
+function validarVarianteAntesDeGuardar() {
+  const errores = [];
+
+  if (!obtenerValor("variante_principal")) {
+    errores.push("Selecciona o confirma el tipo comercial.");
+  }
+
+  if (!obtenerValor("variante_nombre")) {
+    errores.push("Escribe la descripción corta de la variante.");
+  }
+
+  if (!obtenerValor("variante_marca_repuesto")) {
+    errores.push("Escribe la marca del repuesto.");
+  }
+
+  const precio = Number(obtenerValor("variante_precio"));
+
+  if (!Number.isFinite(precio) || precio <= 0) {
+    errores.push("El precio de venta debe ser mayor a cero.");
+  }
+
+  const stock = Number(obtenerValor("variante_stock"));
+
+  if (!Number.isInteger(stock) || stock < 0) {
+    errores.push("El stock debe ser un número entero mayor o igual a cero.");
+  }
+
+  const stockMinimo = Number(obtenerValor("variante_stock_minimo"));
+
+  if (!Number.isInteger(stockMinimo) || stockMinimo < 0) {
+    errores.push("El stock mínimo debe ser un número entero mayor o igual a cero.");
+  }
+
+  if (!obtenerValor("variante_condicion")) {
+    errores.push("Selecciona la condición del producto.");
+  }
+
+  if (obtenerCheck("variante_publicar_merchant")) {
+    const merchant = validarDatosMerchant();
+
+    if (!merchant.valida) {
+      errores.push("Completa los datos mínimos para Merchant Center.");
+      actualizarEstadoMerchant();
+
+      return {
+        valida: false,
+        mensaje: errores[0],
+        errores,
+        tab: "seo",
+      };
+    }
+  }
+
+  return {
+    valida: errores.length === 0,
+    mensaje: errores[0] || "",
+    errores,
+    tab: "operacion",
+  };
+}
+
+function inicializarCamposSeoAutogenerables(esNuevo = false) {
+  [
+    "variante_titulo_seo",
+    "variante_resumen_seo",
+    "variante_descripcion_merchant",
+  ].forEach((id) => {
+    const campo = document.getElementById(id);
+
+    if (!campo) return;
+
+    campo.dataset.autoGenerado = esNuevo || !campo.value.trim()
+      ? "true"
+      : "false";
+  });
+}
+
+function debeAutogenerarCampo(id) {
+  const campo = document.getElementById(id);
+
+  if (!campo) return false;
+
+  return !campo.value.trim() || campo.dataset.autoGenerado === "true";
+}
+
+function setValorAutogenerado(id, valor) {
+  const campo = document.getElementById(id);
+
+  if (!campo) return;
+
+  campo.value = valor ?? "";
+  campo.dataset.autoGenerado = "true";
+}
+
+function obtenerMarcasSeleccionadasTexto() {
+  const select = elementos.selectMarca;
+
+  if (!select) {
+    if (estado.producto?.marca_nombres?.length) {
+      return estado.producto.marca_nombres.join(" ");
+    }
+
+    return estado.producto?.marca_nombre || "";
+  }
+
+  const seleccionadas = Array.from(select.selectedOptions || [])
+    .map((option) => option.textContent.trim())
+    .filter(Boolean);
+
+  if (seleccionadas.length) {
+    return seleccionadas.join(" ");
+  }
+
+  if (estado.producto?.marca_nombres?.length) {
+    return estado.producto.marca_nombres.join(" ");
+  }
+
+  return estado.producto?.marca_nombre || "";
 }
 
 function obtenerMarcaPrincipalSeleccionada() {
@@ -1232,18 +2248,6 @@ function sincronizarTipoComercialVariante() {
 
   setValor("variante_principal", tipoAutomatico);
   setValor("variante_principal_visual", tipoAutomatico);
-}
-
-function construirResumenVariante(titulo, marcaRepuesto, referenciaOem) {
-  const partes = [];
-
-  if (titulo) partes.push(`Compra ${titulo}.`);
-  if (marcaRepuesto) partes.push(`Marca ${marcaRepuesto}.`);
-  if (referenciaOem) partes.push(`Referencia OEM ${referenciaOem}.`);
-
-  partes.push("Disponible para cotización por WhatsApp.");
-
-  return partes.join(" ");
 }
 
 function obtenerNombreConfiguracionSeleccionada() {
