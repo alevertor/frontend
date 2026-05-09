@@ -9,11 +9,16 @@ import {
 
 import {
   protegerSoloAdmin,
+  aplicarPermisosVisuales,
   configurarBotonCerrarSesion,
+  iniciarIndicadorSesion,
+  finalizarCargaAdmin,
 } from "../auth.js";
 
 let usuariosOriginales = [];
 let usuarioEditando = null;
+let modalUsuario = null;
+let modalPasswordUsuario = null;
 
 const btnNuevoUsuario = document.getElementById("btnNuevoUsuario");
 const btnRecargarUsuarios = document.getElementById("btnRecargarUsuarios");
@@ -28,7 +33,6 @@ const textoCantidadUsuarios = document.getElementById("textoCantidadUsuarios");
 const contenedorAlertaUsuarios = document.getElementById("contenedorAlertaUsuarios");
 
 const modalUsuarioElemento = document.getElementById("modalUsuario");
-const modalUsuario = new bootstrap.Modal(modalUsuarioElemento);
 
 const formUsuario = document.getElementById("formUsuario");
 const tituloModalUsuario = document.getElementById("tituloModalUsuario");
@@ -43,7 +47,6 @@ const usuarioSuperusuario = document.getElementById("usuarioSuperusuario");
 const btnGuardarUsuario = document.getElementById("btnGuardarUsuario");
 
 const modalPasswordUsuarioElemento = document.getElementById("modalPasswordUsuario");
-const modalPasswordUsuario = new bootstrap.Modal(modalPasswordUsuarioElemento);
 
 const formPasswordUsuario = document.getElementById("formPasswordUsuario");
 const textoUsuarioPassword = document.getElementById("textoUsuarioPassword");
@@ -56,11 +59,35 @@ const contenedorToast = document.getElementById("contenedorToast");
 document.addEventListener("DOMContentLoaded", iniciarPagina);
 
 async function iniciarPagina() {
-  if (!protegerSoloAdmin()) return;
+  if (!protegerSoloAdmin()) {
+    finalizarCargaAdmin();
+    return;
+  }
 
-  configurarBotonCerrarSesion("btnCerrarSesion");
-  registrarEventos();
-  await cargarUsuarios();
+  try {
+    aplicarPermisosVisuales();
+    configurarBotonCerrarSesion();
+    iniciarIndicadorSesion();
+
+    inicializarModales();
+    registrarEventos();
+
+    await cargarUsuarios();
+  } catch (error) {
+    mostrarToast(error.message || "No fue posible cargar la página de usuarios.", "danger");
+  } finally {
+    finalizarCargaAdmin();
+  }
+}
+
+function inicializarModales() {
+  if (modalUsuarioElemento && window.bootstrap) {
+    modalUsuario = new bootstrap.Modal(modalUsuarioElemento);
+  }
+
+  if (modalPasswordUsuarioElemento && window.bootstrap) {
+    modalPasswordUsuario = new bootstrap.Modal(modalPasswordUsuarioElemento);
+  }
 }
 
 function registrarEventos() {
@@ -269,7 +296,7 @@ function abrirModalNuevoUsuario() {
   usuarioActivo.checked = true;
   usuarioSuperusuario.checked = false;
 
-  modalUsuario.show();
+  modalUsuario?.show();
 }
 
 function abrirModalEditarUsuario(usuario) {
@@ -286,7 +313,7 @@ function abrirModalEditarUsuario(usuario) {
   usuarioActivo.checked = usuario.activo !== false;
   usuarioSuperusuario.checked = usuario.es_superusuario === true;
 
-  modalUsuario.show();
+  modalUsuario?.show();
 }
 
 async function guardarUsuario(evento) {
@@ -328,7 +355,7 @@ async function guardarUsuario(evento) {
       mostrarToast("Usuario actualizado correctamente.", "success");
     }
 
-    modalUsuario.hide();
+    modalUsuario?.hide();
     await cargarUsuarios();
   } catch (error) {
     mostrarToast(error.message || "No fue posible guardar el usuario.", "danger");
@@ -380,7 +407,7 @@ function abrirModalPasswordUsuario(usuario) {
   nuevaPasswordUsuario.value = "";
   textoUsuarioPassword.textContent = usuario.correo || "";
 
-  modalPasswordUsuario.show();
+  modalPasswordUsuario?.show();
 }
 
 async function guardarPasswordUsuario(evento) {
@@ -405,7 +432,7 @@ async function guardarPasswordUsuario(evento) {
 
     await cambiarPasswordUsuarioAdmin(id, { password });
 
-    modalPasswordUsuario.hide();
+    modalPasswordUsuario?.hide();
     mostrarToast("Contraseña actualizada correctamente.", "success");
 
     await cargarUsuarios();
