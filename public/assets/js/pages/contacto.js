@@ -242,7 +242,7 @@ function renderizarCategorias() {
           value="${categoria.id}"
         >
         <label class="form-check-label" for="categoria-${categoria.id}">
-          ${escaparHtml(categoria.nombre)}
+          ${escaparHtml(obtenerNombreCategoriaFormulario(categoria.nombre))}
         </label>
       </div>
     `)
@@ -639,6 +639,27 @@ function limpiarEspaciosInternos(valor, recortarExtremos = true) {
   const texto = String(valor || "").replace(/\s+/g, " ");
 
   return recortarExtremos ? texto.trim() : texto;
+}
+
+function obtenerNombreCategoriaFormulario(nombreCategoria) {
+  const nombre = String(nombreCategoria ?? "").trim();
+
+  const nombresSingulares = {
+    culatas: "Culata",
+    turbos: "Turbo",
+    bielas: "Biela",
+    ciguenales: "Cigüeñal",
+    "cigüeñales": "Cigüeñal",
+    inyectores: "Inyector",
+    bloques: "Bloque",
+  };
+
+  const clave = nombre
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  return nombresSingulares[clave] || nombre;
 }
 
 function escaparHtml(valor) {
