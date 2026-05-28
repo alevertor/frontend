@@ -12,6 +12,7 @@ import {
   aplicarPermisosVisuales,
   usuarioEsAdmin,
   iniciarIndicadorSesion,
+  finalizarCargaAdmin,
 } from "../auth.js";
 
 const URL_BASE_BACKEND = "http://127.0.0.1:8000";
@@ -37,6 +38,8 @@ const botonLimpiarFiltros = document.getElementById("boton-limpiar-filtros");
 const botonAnadirProducto = document.getElementById("boton-anadir-producto");
 const botonAnterior = document.getElementById("boton-anterior");
 const botonSiguiente = document.getElementById("boton-siguiente");
+const botonBuscarInventario = formularioFiltros?.querySelector('button[type="submit"]');
+const contenedorTablaInventario = document.getElementById("contenedor-tabla-inventario");
 
 const cuerpoTabla = document.getElementById("cuerpo-tabla-inventario");
 const contenedorAlerta = document.getElementById("contenedor-alerta");
@@ -189,6 +192,23 @@ function limpiarAlerta() {
   contenedorAlerta.innerHTML = "";
 }
 
+function mostrarAlertaVentaRapida(mensaje, tipo = "danger") {
+  if (!alertaVentaCantidad) {
+    mostrarAlerta(mensaje, tipo);
+    return;
+  }
+
+  alertaVentaCantidad.className = `alert alert-${tipo} py-2 px-3 small`;
+  alertaVentaCantidad.textContent = mensaje;
+}
+
+function limpiarAlertaVentaRapida() {
+  if (!alertaVentaCantidad) return;
+
+  alertaVentaCantidad.textContent = "";
+  alertaVentaCantidad.className = "alert alert-warning py-2 px-3 small d-none";
+}
+
 function construirEstado(variante) {
   const badges = [];
 
@@ -293,6 +313,276 @@ function renderizarListaTexto(valor) {
     <ul class="lista-detalle-variante">
       ${items.map((item) => `<li>${escaparHtml(item)}</li>`).join("")}
     </ul>
+  `;
+}
+
+function formatearFechaHora(valor) {
+  if (!valor) {
+    return "—";
+  }
+
+  const fecha = new Date(valor);
+
+  if (Number.isNaN(fecha.getTime())) {
+    return "—";
+  }
+
+  return fecha.toLocaleString("es-CO", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
+function formatearValorAuditoria(clave, valor, detalle = null) {
+  if (clave === "activa") {
+    return valor ? "Activa" : "Inactiva";
+  }
+
+  if (clave === "configuracion_id") {
+    const nombreConfiguracion = detalle?.nombre_configuracion || "";
+
+    if (nombreConfiguracion) {
+      return escaparHtml(nombreConfiguracion);
+    }
+
+    return "Sin configuración";
+  }
+
+  if (valor === null || valor === undefined || valor === "") {
+    return "—";
+  }
+
+  const camposMoneda = new Set(["precio", "costo"]);
+
+  if (camposMoneda.has(clave) && typeof valor === "number") {
+    return formatearMoneda(valor);
+  }
+
+  if (typeof valor === "boolean") {
+    return valor ? "Sí" : "No";
+  }
+
+  return escaparHtml(String(valor));
+}
+
+function obtenerEtiquetaCampoAuditoria(clave) {
+  const etiquetas = {
+    nombre: "Nombre",
+    configuracion_id: "Configuración",
+    variante_principal: "Tipo",
+    variante_secundaria: "Detalle adicional",
+    marca_repuesto: "Marca repuesto",
+    incluye: "Incluye",
+    paquete: "Paquete",
+    condicion: "Condición",
+    codigo_interno: "Código interno",
+    sku: "SKU",
+    referencia_oem: "Referencia OEM",
+    precio: "Precio",
+    costo: "Costo",
+    stock: "Stock",
+    stock_minimo: "Stock mínimo",
+    ubicacion: "Ubicación",
+    activa: "Estado",
+    es_predeterminada: "Predeterminada",
+    publicar_merchant: "Publicar Merchant",
+  };
+
+  return etiquetas[clave] || clave;
+}
+
+function obtenerTituloAccionAuditoria(accion) {
+  const accionNormalizada = String(accion || "").toLowerCase();
+
+  const mapa = {
+    crear: "Creación",
+    actualizar: "Actualización",
+    desactivar: "Desactivación",
+    activar: "Activación",
+    actualizar_inventario: "Actualización",
+  };
+
+  return mapa[accionNormalizada] || escaparHtml(String(accion || "Movimiento"));
+}
+
+function esRegistroCreacion(registro) {
+  return String(registro?.accion || "").toLowerCase() === "crear";
+}
+
+function debeOcultarCampoAuditoria(clave, valorNuevo, registro) {
+  const clavesTecnicas = new Set([
+    "id",
+    "producto_id",
+    "slug",
+    "titulo_seo",
+    "resumen_seo",
+    "descripcion_merchant",
+    "creado_en",
+    "actualizado_en",
+    "creado_por_id",
+    "actualizado_por_id",
+  ]);
+
+  if (clavesTecnicas.has(clave)) {
+    return true;
+  }
+
+  if (!ES_ADMIN && clave === "costo") {
+    return true;
+  }
+
+  if (esRegistroCreacion(registro)) {
+    if (clave === "condicion" && String(valorNuevo || "").toLowerCase() === "nuevo") {
+      return true;
+    }
+
+    if (clave === "es_predeterminada" && valorNuevo === false) {
+      return true;
+    }
+
+    if (clave === "publicar_merchant" && valorNuevo === false) {
+      return true;
+    }
+
+    if (clave === "configuracion_id" && (valorNuevo === null || valorNuevo === undefined || valorNuevo === "")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function construirLineaCambioAuditoria(clave, valorAnterior, valorNuevo, registro, detalle) {
+  if (debeOcultarCampoAuditoria(clave, valorNuevo, registro)) {
+    return "";
+  }
+
+  const etiqueta = escaparHtml(obtenerEtiquetaCampoAuditoria(clave));
+
+  if (esRegistroCreacion(registro)) {
+    return `
+      <li>
+        <strong>${etiqueta}:</strong> ${formatearValorAuditoria(clave, valorNuevo, detalle)}
+      </li>
+    `;
+  }
+
+  return `
+    <li>
+      <strong>${etiqueta}:</strong>
+      ${formatearValorAuditoria(clave, valorAnterior, detalle)} → ${formatearValorAuditoria(clave, valorNuevo, detalle)}
+    </li>
+  `;
+}
+
+function construirListaCambiosAuditoria(registro, detalle) {
+  const anteriores = registro.valores_anteriores || {};
+  const nuevos = registro.valores_nuevos || {};
+  const claves = Object.keys(nuevos);
+
+  const items = claves
+    .map((clave) =>
+      construirLineaCambioAuditoria(
+        clave,
+        anteriores[clave],
+        nuevos[clave],
+        registro,
+        detalle
+      )
+    )
+    .filter(Boolean);
+
+  if (!items.length) {
+    return '<div class="text-muted small">Sin cambios detallados.</div>';
+  }
+
+  return `
+    <ul class="lista-detalle-variante mb-0">
+      ${items.join("")}
+    </ul>
+  `;
+}
+
+function construirCabeceraAuditoria(detalle) {
+  const bloqueCreadoPor = ES_ADMIN
+    ? `<div><strong>Creado por:</strong> ${textoSeguro(detalle.creado_por_nombre)}</div>`
+    : "";
+
+  const bloqueActualizadoPor = ES_ADMIN
+    ? `<div><strong>Última modificación por:</strong> ${textoSeguro(detalle.actualizado_por_nombre)}</div>`
+    : "";
+
+  return `
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        ${bloqueCreadoPor}
+        <div><strong>Fecha creación:</strong> ${textoSeguro(formatearFechaHora(detalle.creado_en))}</div>
+      </div>
+
+      <div class="col-md-6">
+        ${bloqueActualizadoPor}
+        <div><strong>Última modificación:</strong> ${textoSeguro(formatearFechaHora(detalle.actualizado_en))}</div>
+      </div>
+    </div>
+  `;
+}
+
+function construirBloqueRegistroAuditoria(registro, detalle) {
+  const fecha = formatearFechaHora(registro.creado_en);
+  const tituloAccion = obtenerTituloAccionAuditoria(registro.accion);
+  const mostrarAutor = ES_ADMIN;
+  const usuario = registro.usuario_admin_nombre || "Sistema";
+
+  const bloqueAutor = mostrarAutor
+    ? `<div class="small mb-2"><strong>Por:</strong> ${escaparHtml(usuario)}</div>`
+    : "";
+
+  const observacion = registro.observacion
+    ? `<div class="small text-muted mb-2">${escaparHtml(registro.observacion)}</div>`
+    : "";
+
+  return `
+    <div class="border rounded p-3 mb-3">
+      <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+        <div>
+          <strong>${tituloAccion}</strong>
+        </div>
+        <div class="small text-muted">${fecha}</div>
+      </div>
+
+      ${bloqueAutor}
+      ${observacion}
+      ${construirListaCambiosAuditoria(registro, detalle)}
+    </div>
+  `;
+}
+
+function construirAuditoriaVariante(detalle) {
+  const auditoriaReciente = Array.isArray(detalle.auditoria_reciente)
+    ? detalle.auditoria_reciente
+    : [];
+
+  const auditoriaHtml = auditoriaReciente.length
+    ? auditoriaReciente
+        .map((registro) => construirBloqueRegistroAuditoria(registro, detalle))
+        .join("")
+    : '<div class="text-muted">Todavía no hay movimientos de auditoría para esta variante.</div>';
+
+  return `
+    <div class="row g-3 mt-1">
+      <div class="col-12">
+        <div class="border rounded p-3">
+          <h6 class="mb-3">Auditoría</h6>
+
+          ${construirCabeceraAuditoria(detalle)}
+
+          <div>
+            <h6 class="mb-3">Movimientos recientes</h6>
+            ${auditoriaHtml}
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -550,6 +840,58 @@ function renderizarPaginacion(paginacion) {
     paginacion.total_paginas === 0 || paginacion.pagina >= paginacion.total_paginas;
 }
 
+function activarCargaTablaInventario(mensaje = "Actualizando inventario...") {
+  const tieneFilasReales = cuerpoTabla?.querySelector("tr[data-variante-fila]");
+
+  if (!tieneFilasReales) {
+    cuerpoTabla.innerHTML = `
+      <tr>
+        <td colspan="${COLUMNAS_TABLA_INVENTARIO}" class="text-center py-4 text-muted">
+          ${escaparHtml(mensaje)}
+        </td>
+      </tr>
+    `;
+  }
+
+  const textoCarga = contenedorTablaInventario?.querySelector("[data-texto-carga-tabla]");
+
+  if (textoCarga) {
+    textoCarga.textContent = mensaje;
+  }
+
+  contenedorTablaInventario?.classList.add("tabla-admin-contenedor-cargando");
+  contenedorTablaInventario?.querySelector(".tabla-admin-overlay")?.setAttribute("aria-hidden", "false");
+  actualizarControlesCargaInventario(true);
+}
+
+function desactivarCargaTablaInventario() {
+  contenedorTablaInventario?.classList.remove("tabla-admin-contenedor-cargando");
+  contenedorTablaInventario?.querySelector(".tabla-admin-overlay")?.setAttribute("aria-hidden", "true");
+  actualizarControlesCargaInventario(false);
+  restaurarEstadoPaginacionInventario();
+}
+
+function actualizarControlesCargaInventario(cargando) {
+  const controles = [
+    botonLimpiarFiltros,
+    botonAnterior,
+    botonSiguiente,
+    botonBuscarInventario,
+  ];
+
+  controles.forEach((control) => {
+    if (control) {
+      control.disabled = cargando;
+    }
+  });
+}
+
+function restaurarEstadoPaginacionInventario() {
+  botonAnterior.disabled = paginaActual <= 1;
+  botonSiguiente.disabled =
+    ultimaPaginacion.total_paginas === 0 || paginaActual >= ultimaPaginacion.total_paginas;
+}
+
 function obtenerParametrosFiltros() {
   return {
     busqueda: campoBusqueda.value.trim(),
@@ -566,17 +908,11 @@ function obtenerParametrosFiltros() {
   };
 }
 
-async function cargarInventario() {
+async function cargarInventario(mensajeCarga = "Actualizando inventario...") {
+  activarCargaTablaInventario(mensajeCarga);
+
   try {
     limpiarAlerta();
-
-    cuerpoTabla.innerHTML = `
-      <tr>
-        <td colspan="${COLUMNAS_TABLA_INVENTARIO}" class="text-center py-4">
-          Cargando inventario...
-        </td>
-      </tr>
-    `;
 
     const parametros = obtenerParametrosFiltros();
     const respuesta = await obtenerInventarioVariantes(parametros);
@@ -596,6 +932,8 @@ async function cargarInventario() {
     `;
 
     mostrarAlerta(error.message || "Error cargando inventario.");
+  } finally {
+    desactivarCargaTablaInventario();
   }
 }
 
@@ -686,6 +1024,7 @@ function actualizarResumenVentaRapida() {
 
 function abrirModalVentaRapida(item) {
   itemVentaActual = item;
+  limpiarAlertaVentaRapida();
 
   campoVentaProducto.value = item.nombre_producto || "";
   campoVentaVariante.value = construirTextoOfertaPlano(item);
@@ -705,12 +1044,12 @@ function abrirModalVentaRapida(item) {
   modalVentaRapida?.show();
 }
 
-function construirUrlProductoPublico(slugVariante) {
-  if (!slugVariante) {
+function construirUrlProductoPublico(slugProducto) {
+  if (!slugProducto) {
     return null;
   }
 
-  return `../public/producto.html?slug=${encodeURIComponent(slugVariante)}`;
+  return `../public/pages/producto.html?slug=${encodeURIComponent(slugProducto)}`;
 }
 
 function construirUrlProductoAdmin(productoId, varianteId = null) {
@@ -727,7 +1066,7 @@ function construirUrlProductoAdmin(productoId, varianteId = null) {
 
 function renderizarDetalleVariante(detalle) {
   const rutaImagen = construirRutaImagen(detalle);
-  const urlProductoPublico = construirUrlProductoPublico(detalle.slug_variante);
+  const urlProductoPublico = construirUrlProductoPublico(detalle.slug_producto);
   const urlProductoAdmin = construirUrlProductoAdmin(detalle.producto_id, detalle.id);
   const tipoOferta = construirTipoOferta(detalle);
   const referencia = detalle.referencia_oem || detalle.referencia_original || "";
@@ -776,7 +1115,7 @@ function renderizarDetalleVariante(detalle) {
             ES_ADMIN
               ? `
                 <a href="${escaparAtributo(urlProductoAdmin)}" class="btn btn-outline-primary btn-sm">
-                  Abrir producto admin
+                  Editar producto
                 </a>
               `
               : ""
@@ -824,6 +1163,8 @@ function renderizarDetalleVariante(detalle) {
         </div>
       </div>
     </div>
+
+    ${construirAuditoriaVariante(detalle)}
   `;
 }
 
@@ -911,9 +1252,9 @@ async function manejarEnvioVentaRapida(evento) {
     actualizarResumenVentaRapida();
 
     mostrarAlerta("Venta registrada correctamente.", "success");
-    await cargarInventario();
+    await cargarInventario("Cargando inventario...");
   } catch (error) {
-    mostrarAlerta(error.message || "No fue posible registrar la venta.");
+    mostrarAlertaVentaRapida(error.message || "No fue posible registrar la venta.");
   } finally {
     botonConfirmarVenta.disabled = false;
     botonConfirmarVenta.textContent = "Registrar venta";
@@ -1003,13 +1344,13 @@ function limpiarFiltros() {
   campoDireccion.value = "asc";
   campoSoloActivas.checked = true;
   paginaActual = 1;
-  cargarInventario();
+  cargarInventario("Limpiando filtros...");
 }
 
 formularioFiltros.addEventListener("submit", (evento) => {
   evento.preventDefault();
   paginaActual = 1;
-  cargarInventario();
+  cargarInventario("Aplicando filtros...");
 });
 
 formularioVentaRapida?.addEventListener("submit", manejarEnvioVentaRapida);
@@ -1026,6 +1367,7 @@ campoVentaCantidad?.addEventListener("change", actualizarResumenVentaRapida);
 modalVentaRapidaElemento?.addEventListener("hidden.bs.modal", () => {
   itemVentaActual = null;
   formularioVentaRapida?.reset();
+  limpiarAlertaVentaRapida();
   actualizarResumenVentaRapida();
 });
 
@@ -1039,29 +1381,37 @@ botonAnadirProducto?.addEventListener("click", () => {
 botonAnterior.addEventListener("click", () => {
   if (paginaActual > 1) {
     paginaActual -= 1;
-    cargarInventario();
+    cargarInventario("Cambiando de página...");
   }
 });
 
 botonSiguiente.addEventListener("click", () => {
   if (paginaActual < ultimaPaginacion.total_paginas) {
     paginaActual += 1;
-    cargarInventario();
+    cargarInventario("Cambiando de página...");
   }
 });
 
-if (!protegerPaginaAdmin()) {
-  throw new Error("Sesión no válida.");
+try {
+  if (!protegerPaginaAdmin()) {
+    finalizarCargaAdmin();
+    throw new Error("Sesión no válida.");
+  }
+
+  configurarBotonCerrarSesion("boton-cerrar-sesion");
+  iniciarIndicadorSesion("infoSesionAdmin");
+  prepararPermisosInventario();
+  prepararEstilosEnfoqueInventario();
+
+  await Promise.all([
+    cargarCategorias(),
+    cargarMarcas(),
+  ]);
+
+  await cargarInventario("Cargando inventario...");
+} catch (error) {
+  console.error("Error iniciando inventario:", error);
+  mostrarAlerta("No fue posible cargar el inventario.", "danger");
+} finally {
+  finalizarCargaAdmin();
 }
-
-configurarBotonCerrarSesion("boton-cerrar-sesion");
-iniciarIndicadorSesion("infoSesionAdmin");
-prepararPermisosInventario();
-prepararEstilosEnfoqueInventario();
-
-await Promise.all([
-  cargarCategorias(),
-  cargarMarcas(),
-]);
-
-await cargarInventario();
