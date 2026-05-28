@@ -1,41 +1,73 @@
 <footer class="footer-publico">
-  <div class="container footer-publico-contenido">
-    <section aria-labelledby="footerMarcaTitulo">
-      <h2 id="footerMarcaTitulo" class="h5 mb-2">
-        Solo Culatas
-      </h2>
+  <div class="footer-publico-contenedor footer-publico-contenido">
+    <section class="footer-publico-bloque" aria-labelledby="footerMarcaTitulo">
+      <a class="footer-publico-marca" href="../index.html" data-ruta-publica="inicio">
+        <span class="footer-publico-marca-icono" aria-hidden="true">S</span>
+        <span id="footerMarcaTitulo">Solo Culatas</span>
+      </a>
 
-      <p class="mb-0">
+      <p>
         Autopartes nuevas para motor en Colombia. Cotiza culatas, cigüeñales,
-        bielas, bloques, turbos, inyectores y más repuestos.
+        bielas, turbos, inyectores y más repuestos con atención digital.
       </p>
     </section>
 
-    <section aria-labelledby="footerEnlacesTitulo">
-      <h3 id="footerEnlacesTitulo" class="h6 mb-3">
-        Enlaces
-      </h3>
+    <section class="footer-publico-bloque" aria-labelledby="footerProductosTitulo">
+      <h2 id="footerProductosTitulo">Productos</h2>
 
       <ul>
         <li>
-          <a href="../index.html" data-ruta-publica="inicio">Inicio</a>
+          <a href="./catalogo.html?categoria=culatas" data-ruta-publica="culatas">
+            Culatas
+          </a>
         </li>
         <li>
-          <a href="./catalogo.html" data-ruta-publica="catalogo">Catálogo</a>
+          <a href="./catalogo.html?categoria=ciguenales" data-ruta-publica="ciguenales">
+            Cigüeñales
+          </a>
         </li>
         <li>
-          <a href="./nosotros.html" data-ruta-publica="nosotros">Nosotros</a>
+          <a href="./catalogo.html?categoria=turbos" data-ruta-publica="turbos">
+            Turbos
+          </a>
         </li>
         <li>
-          <a href="./contacto.html" data-ruta-publica="contacto">Contacto</a>
+          <a href="./catalogo.html" data-ruta-publica="catalogo">
+            Catálogo
+          </a>
         </li>
       </ul>
     </section>
 
-    <section aria-labelledby="footerContactoTitulo">
-      <h3 id="footerContactoTitulo" class="h6 mb-3">
-        Contacto
-      </h3>
+    <section class="footer-publico-bloque" aria-labelledby="footerEmpresaTitulo">
+      <h2 id="footerEmpresaTitulo">Empresa</h2>
+
+      <ul>
+        <li>
+          <a href="../index.html" data-ruta-publica="inicio">
+            Inicio
+          </a>
+        </li>
+        <li>
+          <a href="./nosotros.html" data-ruta-publica="nosotros">
+            Nosotros
+          </a>
+        </li>
+        <li>
+          <a href="./contacto.html" data-ruta-publica="contacto">
+            Contacto
+          </a>
+        </li>
+        <li>
+          <a href="./politicas.html" data-ruta-publica="politicas">
+            Políticas
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="footer-publico-bloque" aria-labelledby="footerContactoTitulo">
+      <h2 id="footerContactoTitulo">Contacto</h2>
 
       <ul>
         <li>
@@ -43,21 +75,63 @@
             ventas@soloculatas.com
           </a>
         </li>
-
         <li>
-          <a href="https://wa.me/573000000000" target="_blank" rel="noopener">
-            WhatsApp: +57 3000000000
+          <a href="https://wa.me/573000000000" target="_blank" rel="noopener noreferrer">
+            +57 300 000 0000
           </a>
         </li>
-
         <li>
-          Colombia
+          Bogotá, Colombia
         </li>
       </ul>
+
+      <div class="footer-publico-redes" aria-label="Redes sociales">
+        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook de Solo Culatas">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M14.2 8.4V6.95c0-.7.46-.86.78-.86h2V3.02L14.22 3c-3.07 0-3.77 2.3-3.77 3.77V8.4H8v3.16h2.45V21h3.75v-9.44h2.78l.36-3.16H14.2Z"
+            />
+          </svg>
+        </a>
+
+        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Solo Culatas">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M7.8 2.75h8.4A5.05 5.05 0 0 1 21.25 7.8v8.4a5.05 5.05 0 0 1-5.05 5.05H7.8a5.05 5.05 0 0 1-5.05-5.05V7.8A5.05 5.05 0 0 1 7.8 2.75Zm0 1.5A3.55 3.55 0 0 0 4.25 7.8v8.4a3.55 3.55 0 0 0 3.55 3.55h8.4a3.55 3.55 0 0 0 3.55-3.55V7.8a3.55 3.55 0 0 0-3.55-3.55H7.8Zm4.2 3.3a4.45 4.45 0 1 1 0 8.9 4.45 4.45 0 0 1 0-8.9Zm0 1.5a2.95 2.95 0 1 0 0 5.9 2.95 2.95 0 0 0 0-5.9Zm4.72-2.32a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1Z"
+            />
+          </svg>
+        </a>
+
+        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="TikTok de Solo Culatas">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M15.5 3c.28 1.72 1.25 3.2 2.65 4.03A6.35 6.35 0 0 0 21 7.9v3.18a8.95 8.95 0 0 1-5.2-1.65v5.55c0 3.2-2.23 5.52-5.38 5.52A5.42 5.42 0 0 1 5 15.08c0-3 2.42-5.42 5.42-5.42.45 0 .88.05 1.3.16v3.28a2.45 2.45 0 0 0-1.3-.35 2.32 2.32 0 1 0 2.32 2.32V3h2.76Z"
+            />
+          </svg>
+        </a>
+
+        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube de Solo Culatas">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M21.55 7.03a2.75 2.75 0 0 0-1.94-1.95C17.9 4.62 12 4.62 12 4.62s-5.9 0-7.61.46a2.75 2.75 0 0 0-1.94 1.95A28.7 28.7 0 0 0 2 12a28.7 28.7 0 0 0 .45 4.97 2.75 2.75 0 0 0 1.94 1.95c1.71.46 7.61.46 7.61.46s5.9 0 7.61-.46a2.75 2.75 0 0 0 1.94-1.95A28.7 28.7 0 0 0 22 12a28.7 28.7 0 0 0-.45-4.97ZM10 15.25v-6.5L15.6 12 10 15.25Z"
+            />
+          </svg>
+        </a>
+      </div>
     </section>
   </div>
 
-  <div class="container footer-publico-copy">
-    © 2026 Solo Culatas. Todos los derechos reservados.
+  <div class="footer-publico-contenedor footer-publico-inferior">
+    <p>
+      © 2026 Solo Culatas. Todos los derechos reservados.
+    </p>
+
+    <p>
+      Atención digital y envíos en Colombia.
+    </p>
   </div>
 </footer>
