@@ -44,6 +44,9 @@ const estado = {
   imagenesVariante: [],
   imagenesVarianteCargando: false,
   imagenPendienteEliminarId: null,
+  operacionImagenVarianteActiva: false,
+  reabrirModalVarianteEnImagenes: false,
+  cierreManualModalVariante: false,
 };
 
 const elementos = {
@@ -102,6 +105,9 @@ const elementos = {
   textoConfirmarEstadoVariante: document.getElementById("textoConfirmarEstadoVariante"),
   btnConfirmarDesactivarVariante: document.getElementById("btnConfirmarDesactivarVariante"),
 
+  btnCerrarModalVariante: document.getElementById("btnCerrarModalVariante"),
+  btnCancelarModalVariante: document.getElementById("btnCancelarModalVariante"),
+
   contenedorToast: document.getElementById("contenedorToast"),
 };
 
@@ -143,14 +149,40 @@ async function iniciarPagina() {
     finalizarCargaAdmin();
   }
 }
-
 function inicializarModales() {
   modalProducto = new bootstrap.Modal(elementos.modalProducto);
   modalConfiguracion = new bootstrap.Modal(elementos.modalConfiguracion);
-  modalVariante = new bootstrap.Modal(elementos.modalVariante);
+
+  modalVariante = new bootstrap.Modal(elementos.modalVariante, {
+    backdrop: "static",
+    keyboard: false,
+  });
+
   modalConfirmarDesactivarVariante = new bootstrap.Modal(
     elementos.modalConfirmarDesactivarVariante
   );
+
+  elementos.modalVariante?.addEventListener("hide.bs.modal", (evento) => {
+    const cierrePorOperacionImagen =
+      estado.operacionImagenVarianteActiva || estado.reabrirModalVarianteEnImagenes;
+
+    if (cierrePorOperacionImagen && !estado.cierreManualModalVariante) {
+      evento.preventDefault();
+      activarTabVariante("tab-variante-imagenes");
+    }
+  });
+
+  elementos.modalVariante?.addEventListener("hidden.bs.modal", () => {
+    estado.cierreManualModalVariante = false;
+    estado.operacionImagenVarianteActiva = false;
+    estado.reabrirModalVarianteEnImagenes = false;
+  });
+
+  elementos.modalVariante?.addEventListener("shown.bs.modal", () => {
+    if (estado.reabrirModalVarianteEnImagenes) {
+      activarTabVariante("tab-variante-imagenes");
+    }
+  });
 }
 
 function registrarEventos() {
@@ -158,11 +190,12 @@ function registrarEventos() {
   elementos.btnNuevaConfiguracion?.addEventListener("click", abrirModalNuevaConfiguracion);
   elementos.btnNuevaVariante?.addEventListener("click", abrirModalNuevaVariante);
 
-  elementos.formProducto.addEventListener("submit", guardarProducto);
-  elementos.formConfiguracion.addEventListener("submit", guardarConfiguracion);
-  elementos.formVariante.addEventListener("submit", (evento) => {
-  evento.preventDefault();
-  evento.stopPropagation();
+  elementos.formProducto?.addEventListener("submit", guardarProducto);
+  elementos.formConfiguracion?.addEventListener("submit", guardarConfiguracion);
+
+  elementos.formVariante?.addEventListener("submit", (evento) => {
+    evento.preventDefault();
+    evento.stopPropagation();
   });
 
   document.getElementById("btnGuardarVariante")?.addEventListener("click", (evento) => {
@@ -171,10 +204,10 @@ function registrarEventos() {
     guardarVariante(evento);
   });
 
-  elementos.listaConfiguraciones.addEventListener("click", manejarAccionesConfiguracion);
-  elementos.listaVariantes.addEventListener("click", manejarAccionesVariante);
+  elementos.listaConfiguraciones?.addEventListener("click", manejarAccionesConfiguracion);
+  elementos.listaVariantes?.addEventListener("click", manejarAccionesVariante);
 
-  elementos.btnConfirmarDesactivarVariante.addEventListener(
+  elementos.btnConfirmarDesactivarVariante?.addEventListener(
     "click",
     confirmarCambioEstadoVariante
   );
@@ -182,13 +215,81 @@ function registrarEventos() {
   elementos.btnSubirImagenVariante?.addEventListener("click", (evento) => {
     evento.preventDefault();
     evento.stopPropagation();
+
+    estado.cierreManualModalVariante = false;
+    estado.operacionImagenVarianteActiva = true;
+    estado.reabrirModalVarianteEnImagenes = true;
+
     subirImagenVarianteDesdeFormulario(evento);
   });
 
-  elementos.listaImagenesVariante?.addEventListener(
-    "click",
-    manejarAccionesImagenVariante
-  );
+  elementos.listaImagenesVariante?.addEventListener("click", (evento) => {
+    const botonAccionImagen = evento.target.closest("[data-accion-imagen]");
+
+    if (!botonAccionImagen) {
+      return;
+    }
+
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    estado.cierreManualModalVariante = false;
+    estado.operacionImagenVarianteActiva = true;
+    estado.reabrirModalVarianteEnImagenes = true;
+
+    manejarAccionesImagenVariante(evento);
+  });
+
+  elementos.btnCerrarModalVariante?.addEventListener("click", (evento) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    estado.cierreManualModalVariante = true;
+    estado.operacionImagenVarianteActiva = false;
+    estado.reabrirModalVarianteEnImagenes = false;
+
+    modalVariante.hide();
+  });
+
+  elementos.btnCancelarModalVariante?.addEventListener("click", (evento) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    estado.cierreManualModalVariante = true;
+    estado.operacionImagenVarianteActiva = false;
+    estado.reabrirModalVarianteEnImagenes = false;
+
+    modalVariante.hide();
+  });
+
+  elementos.formVariante?.addEventListener("click", (evento) => {
+    const estaEnPanelImagenes = evento.target.closest("#panel-variante-imagenes");
+
+    if (!estaEnPanelImagenes) {
+      return;
+    }
+
+    const esBotonCerrar = evento.target.closest(
+      "#btnCerrarModalVariante, #btnCancelarModalVariante"
+    );
+
+    if (esBotonCerrar) {
+      return;
+    }
+
+    evento.stopPropagation();
+  });
+
+  if (elementos.btnSubirImagenVariante) {
+    elementos.btnSubirImagenVariante.textContent = "Subir";
+    elementos.btnSubirImagenVariante.type = "button";
+  }
+
+  const btnGuardarVariante = document.getElementById("btnGuardarVariante");
+
+  if (btnGuardarVariante) {
+    btnGuardarVariante.type = "button";
+  }
 
   [
     "categoria_id",
@@ -581,7 +682,6 @@ function obtenerPayloadProducto() {
     activo: obtenerCheck("activo"),
   };
 }
-
 function abrirModalNuevaConfiguracion() {
   if (!estado.productoId) {
     mostrarToast("Guarda primero el producto.", "warning");
@@ -591,6 +691,13 @@ function abrirModalNuevaConfiguracion() {
   elementos.formConfiguracion.reset();
 
   setValor("configuracion_id", "");
+  setValor("atributo_principal_nombre", "Detalle técnico");
+  setValor("atributo_principal_valor", "");
+  setValor("atributo_secundario_nombre", "");
+  setValor("atributo_secundario_valor", "");
+  setValor("atributo_extra_nombre", "");
+  setValor("atributo_extra_valor", "");
+
   setCheck("configuracion_activa", true);
   setCheck("configuracion_predeterminada", false);
 
@@ -757,7 +864,9 @@ function abrirModalNuevaVariante() {
   renderizarOpcionesConfiguracionVariante();
   actualizarControlTipoComercialVariante();
 
-  activarTabVariante("tab-variante-operacion");
+  if (!estado.operacionImagenVarianteActiva) {
+    activarTabVariante("tab-variante-operacion");
+  }
 
   elementos.tituloModalVariante.textContent = "Nueva variante";
 
@@ -812,7 +921,9 @@ function abrirModalEditarVariante(varianteId) {
   setCheck("variante_predeterminada", variante.es_predeterminada);
   setCheck("variante_publicar_merchant", variante.publicar_merchant);
 
-  activarTabVariante("tab-variante-operacion");
+  if (!estado.operacionImagenVarianteActiva) {
+    activarTabVariante("tab-variante-operacion");
+  }
 
   inicializarCamposSeoAutogenerables(false);
   actualizarContadoresSeoMerchant();
@@ -845,7 +956,9 @@ async function guardarVariante(evento) {
       if (validacion.tab === "seo") {
         activarTabVariante("tab-variante-seo");
       } else {
-        activarTabVariante("tab-variante-operacion");
+        if (!estado.operacionImagenVarianteActiva) {
+          activarTabVariante("tab-variante-operacion");
+        }
       }
 
       mostrarToast(validacion.mensaje, "warning");
@@ -1115,11 +1228,13 @@ async function subirImagenVarianteDesdeFormulario(evento) {
 
   if (!varianteId) {
     mostrarToast("Guarda primero la variante antes de subir imágenes.", "warning");
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
   if (estado.imagenesVariante.length >= MAXIMO_IMAGENES_VARIANTE) {
     mostrarToast("La variante ya tiene el máximo de 7 imágenes.", "warning");
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
@@ -1127,6 +1242,7 @@ async function subirImagenVarianteDesdeFormulario(evento) {
 
   if (!archivo) {
     mostrarToast("Selecciona una imagen para subir.", "warning");
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
@@ -1134,6 +1250,7 @@ async function subirImagenVarianteDesdeFormulario(evento) {
 
   if (!tiposPermitidos.includes(archivo.type)) {
     mostrarToast("Formato no permitido. Usa JPG, PNG o WEBP.", "warning");
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
@@ -1141,6 +1258,7 @@ async function subirImagenVarianteDesdeFormulario(evento) {
 
   if (archivo.size > tamanoMaximo) {
     mostrarToast("La imagen supera el tamaño máximo de 5 MB.", "warning");
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
@@ -1149,10 +1267,16 @@ async function subirImagenVarianteDesdeFormulario(evento) {
 
   if (orden !== null && (!Number.isInteger(orden) || orden < 1 || orden > 7)) {
     mostrarToast("El orden debe estar entre 1 y 7.", "warning");
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
   try {
+    estado.operacionImagenVarianteActiva = true;
+    estado.reabrirModalVarianteEnImagenes = true;
+    estado.cierreManualModalVariante = false;
+
+    mantenerModalVarianteAbiertoEnImagenes();
     alternarSubiendoImagen(true);
 
     await subirImagenVariante(Number(varianteId), {
@@ -1167,12 +1291,18 @@ async function subirImagenVarianteDesdeFormulario(evento) {
 
     await cargarImagenesVariante(Number(varianteId));
 
-    activarTabVariante("tab-variante-imagenes");
-    modalVariante.show();
+    mantenerModalVarianteAbiertoEnImagenes();
   } catch (error) {
     mostrarToast(error.message, "danger");
+    mantenerModalVarianteAbiertoEnImagenes();
   } finally {
     alternarSubiendoImagen(false);
+
+    window.setTimeout(() => {
+      estado.operacionImagenVarianteActiva = false;
+      estado.reabrirModalVarianteEnImagenes = false;
+      activarTabVariante("tab-variante-imagenes");
+    }, 450);
   }
 }
 
@@ -1195,12 +1325,14 @@ function manejarAccionesImagenVariante(evento) {
   if (accion === "eliminar") {
     estado.imagenPendienteEliminarId = imagenId;
     renderizarImagenesVariante();
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
   if (accion === "cancelar-eliminar") {
     estado.imagenPendienteEliminarId = null;
     renderizarImagenesVariante();
+    mantenerModalVarianteAbiertoEnImagenes();
     return;
   }
 
@@ -1212,26 +1344,54 @@ function manejarAccionesImagenVariante(evento) {
 async function marcarImagenVarianteComoPrincipal(imagenId) {
   const varianteId = Number(obtenerValor("variante_id"));
 
-  if (!varianteId) return;
+  if (!varianteId) {
+    mantenerModalVarianteAbiertoEnImagenes();
+    return;
+  }
 
   try {
+    estado.operacionImagenVarianteActiva = true;
+    estado.reabrirModalVarianteEnImagenes = true;
+    estado.cierreManualModalVariante = false;
+
+    mantenerModalVarianteAbiertoEnImagenes();
+
     await actualizarImagenVariante(imagenId, {
       es_principal: true,
     });
 
     mostrarToast("Imagen principal actualizada.", "success");
+
     await cargarImagenesVariante(varianteId);
+
+    mantenerModalVarianteAbiertoEnImagenes();
   } catch (error) {
     mostrarToast(error.message, "danger");
+    mantenerModalVarianteAbiertoEnImagenes();
+  } finally {
+    window.setTimeout(() => {
+      estado.operacionImagenVarianteActiva = false;
+      estado.reabrirModalVarianteEnImagenes = false;
+      activarTabVariante("tab-variante-imagenes");
+    }, 450);
   }
 }
 
 async function eliminarImagenVarianteActual(imagenId) {
   const varianteId = Number(obtenerValor("variante_id"));
 
-  if (!varianteId) return;
+  if (!varianteId) {
+    mantenerModalVarianteAbiertoEnImagenes();
+    return;
+  }
 
   try {
+    estado.operacionImagenVarianteActiva = true;
+    estado.reabrirModalVarianteEnImagenes = true;
+    estado.cierreManualModalVariante = false;
+
+    mantenerModalVarianteAbiertoEnImagenes();
+
     await eliminarImagenVariante(imagenId);
 
     estado.imagenPendienteEliminarId = null;
@@ -1240,10 +1400,34 @@ async function eliminarImagenVarianteActual(imagenId) {
 
     await cargarImagenesVariante(varianteId);
 
-    activarTabVariante("tab-variante-imagenes");
-    modalVariante.show();
+    mantenerModalVarianteAbiertoEnImagenes();
   } catch (error) {
     mostrarToast(error.message, "danger");
+    mantenerModalVarianteAbiertoEnImagenes();
+  } finally {
+    window.setTimeout(() => {
+      estado.operacionImagenVarianteActiva = false;
+      estado.reabrirModalVarianteEnImagenes = false;
+      activarTabVariante("tab-variante-imagenes");
+    }, 450);
+  }
+}
+
+function mantenerModalVarianteAbiertoEnImagenes() {
+  activarTabVariante("tab-variante-imagenes");
+
+  if (!modalVariante || !elementos.modalVariante) {
+    return;
+  }
+
+  const modalVisible = elementos.modalVariante.classList.contains("show");
+
+  if (!modalVisible) {
+    modalVariante.show();
+
+    window.setTimeout(() => {
+      activarTabVariante("tab-variante-imagenes");
+    }, 80);
   }
 }
 
@@ -1477,6 +1661,7 @@ async function confirmarCambioEstadoVariante() {
   if (!estado.variantePendienteCambioEstado) return;
 
   const variante = estado.variantePendienteCambioEstado;
+  const textoBotonOriginal = variante.activa ? "Desactivar" : "Activar";
 
   try {
     elementos.btnConfirmarDesactivarVariante.disabled = true;
@@ -1493,15 +1678,41 @@ async function confirmarCambioEstadoVariante() {
     }
 
     estado.variantePendienteCambioEstado = null;
-    modalConfirmarDesactivarVariante.hide();
+    cerrarModalConfirmacionVariante();
 
     await cargarConfiguracionesYVariantes();
   } catch (error) {
-    mostrarToast(error.message, "danger");
+    estado.variantePendienteCambioEstado = null;
+    mostrarErrorVarianteDespuesDeCerrarConfirmacion(error.message);
   } finally {
     elementos.btnConfirmarDesactivarVariante.disabled = false;
-    elementos.btnConfirmarDesactivarVariante.textContent = "Confirmar";
+    elementos.btnConfirmarDesactivarVariante.textContent = textoBotonOriginal;
   }
+}
+
+function cerrarModalConfirmacionVariante() {
+  if (modalConfirmarDesactivarVariante) {
+    modalConfirmarDesactivarVariante.hide();
+  }
+}
+
+function modalConfirmacionVarianteEstaVisible() {
+  return elementos.modalConfirmarDesactivarVariante?.classList.contains("show");
+}
+
+function mostrarErrorVarianteDespuesDeCerrarConfirmacion(mensaje) {
+  if (!modalConfirmarDesactivarVariante || !modalConfirmacionVarianteEstaVisible()) {
+    mostrarToast(mensaje, "danger");
+    return;
+  }
+
+  elementos.modalConfirmarDesactivarVariante.addEventListener(
+    "hidden.bs.modal",
+    () => mostrarToast(mensaje, "danger"),
+    { once: true }
+  );
+
+  cerrarModalConfirmacionVariante();
 }
 
 function construirTextoAtributos(configuracion) {
@@ -2012,6 +2223,12 @@ function validarVarianteAntesDeGuardar() {
     errores.push("El precio de venta debe ser mayor a cero.");
   }
 
+  const costoTexto = obtenerValor("variante_costo");
+
+  if (costoTexto && Number(costoTexto) < 0) {
+    errores.push("El costo no puede ser negativo.");
+  }
+
   const stock = Number(obtenerValor("variante_stock"));
 
   if (!Number.isInteger(stock) || stock < 0) {
@@ -2024,21 +2241,13 @@ function validarVarianteAntesDeGuardar() {
     errores.push("El stock mínimo debe ser un número entero mayor o igual a cero.");
   }
 
-  if (!obtenerValor("variante_condicion")) {
-    errores.push("Selecciona la condición del producto.");
-  }
-
   if (obtenerCheck("variante_publicar_merchant")) {
-    const merchant = validarDatosMerchant();
+    const validacionMerchant = validarDatosMerchant();
 
-    if (!merchant.valida) {
-      errores.push("Completa los datos mínimos para Merchant Center.");
-      actualizarEstadoMerchant();
-
+    if (!validacionMerchant.valida) {
       return {
         valida: false,
-        mensaje: errores[0],
-        errores,
+        mensaje: "Completa los datos requeridos para publicar esta variante en Merchant.",
         tab: "seo",
       };
     }
@@ -2047,12 +2256,11 @@ function validarVarianteAntesDeGuardar() {
   return {
     valida: errores.length === 0,
     mensaje: errores[0] || "",
-    errores,
     tab: "operacion",
   };
 }
 
-function inicializarCamposSeoAutogenerables(esNuevo = false) {
+function inicializarCamposSeoAutogenerables(esNuevaVariante) {
   [
     "variante_titulo_seo",
     "variante_resumen_seo",
@@ -2062,9 +2270,7 @@ function inicializarCamposSeoAutogenerables(esNuevo = false) {
 
     if (!campo) return;
 
-    campo.dataset.autoGenerado = esNuevo || !campo.value.trim()
-      ? "true"
-      : "false";
+    campo.dataset.autoGenerado = esNuevaVariante || !campo.value ? "true" : "false";
   });
 }
 
@@ -2073,7 +2279,7 @@ function debeAutogenerarCampo(id) {
 
   if (!campo) return false;
 
-  return !campo.value.trim() || campo.dataset.autoGenerado === "true";
+  return campo.dataset.autoGenerado !== "false";
 }
 
 function setValorAutogenerado(id, valor) {
@@ -2081,208 +2287,143 @@ function setValorAutogenerado(id, valor) {
 
   if (!campo) return;
 
-  campo.value = valor ?? "";
-  campo.dataset.autoGenerado = "true";
-}
-
-function obtenerMarcasSeleccionadasTexto() {
-  const select = elementos.selectMarca;
-
-  if (!select) {
-    if (estado.producto?.marca_nombres?.length) {
-      return estado.producto.marca_nombres.join(" ");
-    }
-
-    return estado.producto?.marca_nombre || "";
-  }
-
-  const seleccionadas = Array.from(select.selectedOptions || [])
-    .map((option) => option.textContent.trim())
-    .filter(Boolean);
-
-  if (seleccionadas.length) {
-    return seleccionadas.join(" ");
-  }
-
-  if (estado.producto?.marca_nombres?.length) {
-    return estado.producto.marca_nombres.join(" ");
-  }
-
-  return estado.producto?.marca_nombre || "";
-}
-
-function obtenerMarcaPrincipalSeleccionada() {
-  const select = elementos.selectMarca;
-
-  if (!select) {
-    return estado.producto?.marca_nombre || "";
-  }
-
-  const seleccionadas = Array.from(select.selectedOptions || []);
-
-  if (seleccionadas.length) {
-    return seleccionadas[0].textContent.trim();
-  }
-
-  if (estado.producto?.marca_nombres?.length) {
-    return estado.producto.marca_nombres[0];
-  }
-
-  return estado.producto?.marca_nombre || "";
-}
-
-function obtenerNombreCategoriaSeleccionada() {
-  const select = elementos.selectCategoria;
-
-  if (!select) {
-    return estado.producto?.categoria_nombre || "";
-  }
-
-  const option = select.options[select.selectedIndex];
-
-  return option?.textContent?.trim() || estado.producto?.categoria_nombre || "";
-}
-
-function normalizarTextoBase(texto) {
-  return String(texto || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
-function detectarTipoRepuestoDesdeCategoria(nombreCategoria = obtenerNombreCategoriaSeleccionada()) {
-  const categoria = normalizarTextoBase(nombreCategoria);
-
-  const mapa = {
-    culatas: "culata",
-    ciguenales: "cigüeñal",
-    bielas: "biela",
-    turbos: "turbo",
-    inyectores: "inyector",
-    bombas: "bomba de inyección",
-    "bombas de inyeccion": "bomba de inyección",
-    "ejes de levas": "eje de levas",
-    bloques: "bloque",
-    motores: "motor",
-  };
-
-  if (mapa[categoria]) {
-    return mapa[categoria];
-  }
-
-  if (categoria.includes("bomba")) return "bomba de inyección";
-  if (categoria.includes("ciguenal")) return "cigüeñal";
-  if (categoria.includes("culata")) return "culata";
-  if (categoria.includes("biela")) return "biela";
-  if (categoria.includes("turbo")) return "turbo";
-  if (categoria.includes("inyector")) return "inyector";
-  if (categoria.includes("leva")) return "eje de levas";
-  if (categoria.includes("bloque")) return "bloque";
-  if (categoria.includes("motor")) return "motor";
-
-  return categoria.replace(/s$/, "") || "";
-}
-
-function aplicarTipoDetectadoDesdeCategoria(actualizarSiVacio = true) {
-  const tipoDetectado = detectarTipoRepuestoDesdeCategoria();
-
-  if (!tipoDetectado) {
-    if (actualizarSiVacio && !obtenerValor("tipo_repuesto")) {
-      setValor("tipo_repuesto", "");
-    }
-
-    return;
-  }
-
-  setValor("tipo_repuesto", tipoDetectado);
-}
-
-function esCategoriaCulatas() {
-  return normalizarTextoBase(obtenerNombreCategoriaSeleccionada()).includes("culata");
-}
-
-function obtenerTipoComercialAutomatico() {
-  const tipo = detectarTipoRepuestoDesdeCategoria();
-
-  return capitalizar(tipo || "");
+  campo.value = valor || "";
 }
 
 function actualizarControlTipoComercialVariante(valorActual = null) {
-  if (!elementos.inputTipoVariante) return;
-
-  if (esCategoriaCulatas()) {
-    elementos.grupoTipoVarianteCulatas?.classList.remove("d-none");
-    elementos.grupoTipoVarianteAuto?.classList.add("d-none");
-
-    const valor = valorActual ?? obtenerValor("variante_principal");
-
-    elementos.selectTipoVariante.value = ["Sola", "Parcial", "Completa"].includes(valor)
-      ? valor
-      : "";
-
-    setValor("variante_principal", elementos.selectTipoVariante.value);
+  if (!elementos.inputTipoVariante || !elementos.inputTipoVarianteVisual) {
     return;
   }
 
-  const tipoAutomatico = obtenerTipoComercialAutomatico();
+  const tipoDetectado = detectarTipoRepuestoDesdeCategoria();
+  const esCulata = normalizarTextoBase(tipoDetectado) === "culata";
+
+  if (esCulata) {
+    elementos.grupoTipoVarianteCulatas?.classList.remove("d-none");
+    elementos.grupoTipoVarianteAuto?.classList.add("d-none");
+
+    if (elementos.selectTipoVariante && valorActual) {
+      elementos.selectTipoVariante.value = valorActual;
+    }
+
+    sincronizarTipoComercialVariante();
+    return;
+  }
 
   elementos.grupoTipoVarianteCulatas?.classList.add("d-none");
   elementos.grupoTipoVarianteAuto?.classList.remove("d-none");
 
-  setValor("variante_principal", tipoAutomatico);
-  setValor("variante_principal_visual", tipoAutomatico);
-
-  if (elementos.selectTipoVariante) {
-    elementos.selectTipoVariante.value = "";
-  }
+  const tipoAutomatico = tipoDetectado || obtenerValor("tipo_repuesto") || "repuesto";
+  elementos.inputTipoVariante.value = tipoAutomatico;
+  elementos.inputTipoVarianteVisual.value = capitalizar(tipoAutomatico);
 }
 
 function sincronizarTipoComercialVariante() {
-  if (esCategoriaCulatas()) {
-    setValor("variante_principal", elementos.selectTipoVariante?.value || "");
+  if (!elementos.inputTipoVariante) return;
+
+  const tipoDetectado = detectarTipoRepuestoDesdeCategoria();
+  const esCulata = normalizarTextoBase(tipoDetectado) === "culata";
+
+  if (esCulata && elementos.selectTipoVariante) {
+    elementos.inputTipoVariante.value = elementos.selectTipoVariante.value || "";
     return;
   }
 
-  const tipoAutomatico = obtenerTipoComercialAutomatico();
-
-  setValor("variante_principal", tipoAutomatico);
-  setValor("variante_principal_visual", tipoAutomatico);
+  elementos.inputTipoVariante.value = tipoDetectado || obtenerValor("tipo_repuesto") || "repuesto";
 }
 
 function obtenerNombreConfiguracionSeleccionada() {
-  const configuracionId = obtenerValor("variante_configuracion_id");
+  const configuracionId = Number(obtenerValor("variante_configuracion_id"));
 
   if (!configuracionId) return "";
 
-  const configuracion = estado.configuraciones.find(
-    (item) => String(item.id) === String(configuracionId)
-  );
+  const configuracion = estado.configuraciones.find((item) => item.id === configuracionId);
 
   return configuracion?.nombre || "";
 }
 
-function activarTabVariante(tabId) {
-  const tab = document.getElementById(tabId);
+function aplicarTipoDetectadoDesdeCategoria(sobrescribir = true) {
+  const tipoDetectado = detectarTipoRepuestoDesdeCategoria();
+  const tipoActual = obtenerValor("tipo_repuesto");
 
-  if (!tab) return;
-
-  const instancia = bootstrap.Tab.getOrCreateInstance(tab);
-  instancia.show();
+  if (sobrescribir || !tipoActual) {
+    setValor("tipo_repuesto", tipoDetectado);
+  }
 }
 
-function convertirSlug(texto) {
-  return String(texto || "")
-    .toLowerCase()
+function detectarTipoRepuestoDesdeCategoria() {
+  const categoriaTexto = obtenerTextoSelect("categoria_id");
+  const normalizada = normalizarTextoBase(categoriaTexto);
+
+  if (normalizada.includes("culata")) return "culata";
+  if (normalizada.includes("ciguenal")) return "cigüeñal";
+  if (normalizada.includes("biela")) return "biela";
+  if (normalizada.includes("turbo")) return "turbo";
+  if (normalizada.includes("inyector")) return "inyector";
+  if (normalizada.includes("bomba")) return "bomba de inyección";
+  if (normalizada.includes("leva")) return "eje de levas";
+  if (normalizada.includes("bloque")) return "bloque";
+  if (normalizada.includes("motor")) return "motor";
+
+  return "repuesto";
+}
+
+function obtenerMarcasSeleccionadasTexto() {
+  const select = document.getElementById("marca_ids");
+
+  if (!select) return "";
+
+  return Array.from(select.selectedOptions)
+    .map((option) => option.textContent.trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+function obtenerTextoSelect(id) {
+  const select = document.getElementById(id);
+
+  if (!select) return "";
+
+  if (select.multiple) {
+    return Array.from(select.selectedOptions)
+      .map((option) => option.textContent.trim())
+      .join(" ");
+  }
+
+  return select.options[select.selectedIndex]?.textContent || "";
+}
+
+function normalizarTextoBase(valor) {
+  return String(valor || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function convertirSlug(valor) {
+  return normalizarTextoBase(valor)
+    .replace(/ñ/g, "n")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
+function activarTabVariante(tabId) {
+  const boton = document.getElementById(tabId);
+
+  if (!boton) return;
+
+  const tab = new bootstrap.Tab(boton);
+  tab.show();
 }
 
 function obtenerValor(id) {
   const elemento = document.getElementById(id);
-  return elemento ? elemento.value.trim() : "";
+
+  if (!elemento) return "";
+
+  return String(elemento.value || "").trim();
 }
 
 function setValor(id, valor) {
@@ -2293,31 +2434,12 @@ function setValor(id, valor) {
   elemento.value = valor ?? "";
 }
 
-function obtenerValoresMultiples(id) {
-  const elemento = document.getElementById(id);
-
-  if (!elemento) return [];
-
-  return Array.from(elemento.selectedOptions)
-    .map((option) => Number(option.value))
-    .filter((valor) => Number.isInteger(valor) && valor > 0);
-}
-
-function setValoresMultiples(id, valores) {
-  const elemento = document.getElementById(id);
-
-  if (!elemento) return;
-
-  const valoresTexto = (valores || []).map((valor) => String(valor));
-
-  Array.from(elemento.options).forEach((option) => {
-    option.selected = valoresTexto.includes(String(option.value));
-  });
-}
-
 function obtenerCheck(id) {
   const elemento = document.getElementById(id);
-  return elemento ? elemento.checked : false;
+
+  if (!elemento) return false;
+
+  return Boolean(elemento.checked);
 }
 
 function setCheck(id, valor) {
@@ -2328,70 +2450,103 @@ function setCheck(id, valor) {
   elemento.checked = Boolean(valor);
 }
 
-function setTexto(id, valor) {
-  const elemento = document.getElementById(id);
+function obtenerValoresMultiples(id) {
+  const select = document.getElementById(id);
 
-  if (!elemento) return;
+  if (!select) return [];
 
-  elemento.textContent = valor ?? "—";
+  return Array.from(select.selectedOptions)
+    .map((option) => Number(option.value))
+    .filter((valor) => Number.isInteger(valor) && valor > 0);
 }
 
-function setTextoConSaltos(id, valor) {
-  const elemento = document.getElementById(id);
+function setValoresMultiples(id, valores) {
+  const select = document.getElementById(id);
 
-  if (!elemento) return;
+  if (!select) return;
 
-  const texto = valor || "—";
-  elemento.innerHTML = escaparHtml(texto).replaceAll("\n", "<br>");
+  const valoresTexto = new Set((valores || []).map((valor) => String(valor)));
+
+  Array.from(select.options).forEach((option) => {
+    option.selected = valoresTexto.has(option.value);
+  });
 }
 
-function setListaTexto(id, valor) {
+function setTexto(id, texto) {
   const elemento = document.getElementById(id);
 
   if (!elemento) return;
 
-  const texto = String(valor || "").trim();
+  elemento.textContent = texto ?? "—";
+}
 
-  if (!texto || texto === "—") {
-    elemento.textContent = "—";
-    return;
-  }
+function setListaTexto(id, texto) {
+  const elemento = document.getElementById(id);
 
-  const lineas = texto
+  if (!elemento) return;
+
+  const lineas = String(texto || "")
     .split("\n")
     .map((linea) => linea.trim())
     .filter(Boolean);
 
   if (!lineas.length) {
-    elemento.textContent = texto;
+    elemento.textContent = "—";
     return;
   }
 
-  elemento.innerHTML = `
-    <ul class="producto-lista-compatible">
-      ${lineas.map((linea) => `<li>${escaparHtml(linea.replace(/^-\s*/, ""))}</li>`).join("")}
-    </ul>
-  `;
+  elemento.innerHTML = lineas
+    .map((linea) => `<div>${escaparHtml(linea)}</div>`)
+    .join("");
+}
+
+function setTextoConSaltos(id, texto) {
+  const elemento = document.getElementById(id);
+
+  if (!elemento) return;
+
+  const limpio = String(texto || "").trim();
+
+  if (!limpio) {
+    elemento.textContent = "—";
+    return;
+  }
+
+  elemento.innerHTML = escaparHtml(limpio).replaceAll("\n", "<br>");
 }
 
 function alternarGuardandoProducto(guardando) {
+  if (!elementos.btnGuardarProducto) return;
+
   elementos.btnGuardarProducto.disabled = guardando;
   elementos.btnGuardarProducto.textContent = guardando ? "Guardando..." : "Guardar producto";
 }
 
-function mostrarToast(mensaje, tipo = "primary") {
-  const toast = document.createElement("div");
+function mostrarToast(mensaje, tipo = "info") {
+  if (!elementos.contenedorToast) {
+    alert(mensaje);
+    return;
+  }
 
-  toast.className = `toast align-items-center text-bg-${tipo} border-0`;
-  toast.setAttribute("role", "alert");
-  toast.setAttribute("aria-live", "assertive");
-  toast.setAttribute("aria-atomic", "true");
+  const clases = {
+    success: "text-bg-success",
+    danger: "text-bg-danger",
+    warning: "text-bg-warning",
+    info: "text-bg-primary",
+  };
+
+  const toast = document.createElement("div");
+  toast.className = `toast align-items-center border-0 ${clases[tipo] || clases.info}`;
+  toast.role = "alert";
+  toast.ariaLive = "assertive";
+  toast.ariaAtomic = "true";
 
   toast.innerHTML = `
     <div class="d-flex">
       <div class="toast-body">
         ${escaparHtml(mensaje)}
       </div>
+
       <button
         type="button"
         class="btn-close btn-close-white me-2 m-auto"

@@ -3,32 +3,66 @@
 </a>
 
 <header class="encabezado-publico">
-  <nav class="barra-navegacion-publica" aria-label="Navegación principal">
-    <div class="container contenedor-navegacion-publica">
-      <a class="marca-publica" href="../index.html" data-ruta-publica="inicio" aria-label="Ir al inicio de Solo Culatas">
+  <div class="nav-publica-linea-principal">
+    <div class="container contenedor-nav-principal">
+      <a
+        class="marca-publica"
+        href="../index.html"
+        data-ruta-publica="inicio"
+        aria-label="Ir al inicio de Solo Culatas"
+      >
         <span class="marca-icono" aria-hidden="true">S</span>
         <span>Solo Culatas</span>
       </a>
 
-      <form class="buscador-publico" role="search" action="./catalogo.html" method="get">
+      <form
+        class="buscador-publico"
+        role="search"
+        action="./resultados.html"
+        method="get"
+        data-buscador-publico
+      >
         <label class="visually-hidden" for="busquedaPublica">
           Buscar autopartes
         </label>
 
-        <input
-          id="busquedaPublica"
-          name="q"
-          class="entrada-buscador-publico"
-          type="search"
-          autocomplete="off"
-          placeholder="Buscar culatas, cigüeñales, turbos..."
-        >
+        <div class="buscador-publico-campo">
+          <input
+            id="busquedaPublica"
+            name="q"
+            class="entrada-buscador-publico"
+            type="search"
+            autocomplete="off"
+            placeholder="Buscar por vehículo, motor o producto..."
+            data-buscador-input
+          />
 
-        <button class="boton-buscador-publico" type="submit" aria-label="Buscar">
-          <i class="bi bi-search" aria-hidden="true"></i>
-        </button>
+          <button class="boton-buscador-publico" type="submit" aria-label="Buscar">
+            <svg
+              class="icono-buscador-publico"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M10.8 4.2a6.6 6.6 0 1 0 0 13.2 6.6 6.6 0 0 0 0-13.2Zm-8.1 6.6a8.1 8.1 0 1 1 14.35 5.13l4.11 4.11a.75.75 0 1 1-1.06 1.06l-4.11-4.11A8.1 8.1 0 0 1 2.7 10.8Z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div
+          class="buscador-publico-resultados"
+          data-buscador-resultados
+          hidden
+        ></div>
       </form>
+    </div>
+  </div>
 
+  <nav class="nav-publica-linea-enlaces" aria-label="Navegación principal">
+    <div class="container contenedor-nav-enlaces">
       <ul class="enlaces-publicos" aria-label="Secciones principales">
         <li>
           <a href="../index.html" data-ruta-publica="inicio">
@@ -37,8 +71,20 @@
         </li>
 
         <li>
-          <a href="./catalogo.html" data-ruta-publica="catalogo">
-            Catálogo
+          <a href="./catalogo.html?categoria=culatas" data-ruta-publica="culatas">
+            Culatas
+          </a>
+        </li>
+
+        <li>
+          <a href="./catalogo.html?categoria=ciguenales" data-ruta-publica="ciguenales">
+            Cigüeñales
+          </a>
+        </li>
+
+        <li>
+          <a href="./catalogo.html?categoria=turbos" data-ruta-publica="turbos">
+            Turbos
           </a>
         </li>
 

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es" class="layout-publico-preparando">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Culatas multimarca solas y completas | Solo Culatas</title>
+
+  <meta
+    name="description"
+    content="Catálogo de culatas nuevas para motores Hyundai, Kia, Toyota, Nissan, Chevrolet, Mazda, Ford y más marcas. Consulta disponibilidad y cotiza por WhatsApp."
+  />
+
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css?v=botonera-mobile-7" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/pages/catalogo.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+</head>
+
+<body>
+  <header id="headerPublico"></header>
+  <div id="navMobilePublico"></div>
+
+  <main id="contenido-principal" class="pagina-catalogo">
+    <section class="catalogo-encabezado" aria-labelledby="titulo-catalogo">
+      <div class="catalogo-contenedor">
+        <nav class="catalogo-migas" aria-label="Ruta de navegación">
+          <a href="../index.html">Inicio</a>
+          <span>/</span>
+          <span>Culatas</span>
+        </nav>
+
+        <h1 id="titulo-catalogo">Culatas multimarca solas y completas</h1>
+
+        <p class="catalogo-descripcion">
+          Culatas nuevas para motores diésel y gasolina. Revisa referencias, compatibilidad
+          y disponibilidad antes de cotizar.
+        </p>
+      </div>
+    </section>
+
+    <section class="catalogo-contenido">
+      <div class="catalogo-contenedor catalogo-layout">
+        <aside class="catalogo-panel-filtros" aria-label="Filtros del catálogo">
+          <h2>Filtros</h2>
+
+          <div class="catalogo-filtro-grupo">
+            <label for="buscador-productos">Buscar en la categoría</label>
+            <input
+              id="buscador-productos"
+              class="catalogo-buscador"
+              type="search"
+              placeholder="Ej. Hyundai..."
+              autocomplete="off"
+            />
+          </div>
+
+          <p class="catalogo-ayuda">
+            Busca por vehículo, motor, referencia, producto o marca.
+          </p>
+        </aside>
+
+        <section class="catalogo-resultados" aria-labelledby="titulo-resultados">
+          <div class="catalogo-barra">
+            <div>
+              <h2 id="titulo-resultados">Productos</h2>
+              <p id="texto-resultados" class="catalogo-total">Cargando productos...</p>
+            </div>
+          </div>
+
+          <div id="catalogo-estado" class="catalogo-estado" hidden></div>
+
+          <div
+            id="catalogo-grid"
+            class="catalogo-grid"
+            aria-live="polite"
+          ></div>
+
+          <nav
+            id="catalogo-paginacion"
+            class="catalogo-paginacion"
+            aria-label="Paginación del catálogo"
+          ></nav>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footerPublico"></footer>
+
+  <script type="module" src="../assets/js/layout.js?v=botonera-mobile-1"></script>
+  <script type="module" src="../assets/js/pages/catalogo.js"></script>
+</body>
+</html>

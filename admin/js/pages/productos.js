@@ -35,6 +35,7 @@ const elementos = {
   textoResumen: document.getElementById("textoResumenProductos"),
   textoPaginacion: document.getElementById("textoPaginacionProductos"),
   btnRecargar: document.getElementById("btnRecargarProductos"),
+  btnLimpiarFiltros: document.getElementById("btnLimpiarFiltrosProductos"),
   btnPaginaAnterior: document.getElementById("btnPaginaAnterior"),
   btnPaginaSiguiente: document.getElementById("btnPaginaSiguiente"),
 
@@ -45,6 +46,7 @@ const elementos = {
   textoModalConfirmacionEstado: document.getElementById("textoModalConfirmacionEstado"),
   btnConfirmarCambioEstado: document.getElementById("btnConfirmarCambioEstado"),
   contenedorToast: document.getElementById("contenedorToast"),
+  contenedorTabla: document.getElementById("contenedorTablaProductos"),
 };
 
 let modalEstado = null;
@@ -74,7 +76,7 @@ async function iniciarPagina() {
       console.warn("No se pudieron cargar catálogos:", error.message);
     }
 
-    await cargarProductos();
+    await cargarProductos("Cargando productos...");
   } catch (error) {
     console.error(error);
     mostrarMensajeError(error.message);
@@ -89,25 +91,29 @@ function registrarEventos() {
 
     estado.pagina = 1;
     leerFiltros();
-    await cargarProductos();
+    await cargarProductos("Aplicando filtros...");
   });
 
   elementos.btnRecargar?.addEventListener("click", async () => {
-    await cargarProductos();
+    await cargarProductos("Actualizando productos...");
+  });
+
+  elementos.btnLimpiarFiltros?.addEventListener("click", async () => {
+    await limpiarFiltrosProductos();
   });
 
   elementos.btnPaginaAnterior?.addEventListener("click", async () => {
     if (estado.pagina <= 1) return;
 
     estado.pagina -= 1;
-    await cargarProductos();
+    await cargarProductos("Cambiando de página...");
   });
 
   elementos.btnPaginaSiguiente?.addEventListener("click", async () => {
     if (estado.pagina >= estado.totalPaginas) return;
 
     estado.pagina += 1;
-    await cargarProductos();
+    await cargarProductos("Cambiando de página...");
   });
 
   elementos.tabla?.addEventListener("click", manejarAccionTabla);
@@ -149,10 +155,24 @@ function leerFiltros() {
   };
 }
 
-async function cargarProductos() {
-  try {
-    elementos.tabla.innerHTML = construirFilaCargando();
+async function limpiarFiltrosProductos() {
+  elementos.formFiltros?.reset();
 
+  estado.pagina = 1;
+  estado.filtros = {
+    busqueda: "",
+    categoria_id: "",
+    marca_id: "",
+    activo: "",
+  };
+
+  await cargarProductos("Limpiando filtros...");
+}
+
+async function cargarProductos(mensajeCarga = "Actualizando productos...") {
+  activarCargaTabla(mensajeCarga);
+
+  try {
     const parametros = {
       ...estado.filtros,
       pagina: estado.pagina,
@@ -171,6 +191,8 @@ async function cargarProductos() {
   } catch (error) {
     elementos.tabla.innerHTML = construirFilaError(error.message);
     mostrarMensajeError(error.message);
+  } finally {
+    desactivarCargaTabla();
   }
 }
 
@@ -197,13 +219,10 @@ function construirFilaProducto(producto) {
   const accionEstado = producto.activo ? "desactivar" : "activar";
 
   return `
-    <tr>
+    <tr data-producto-id="${producto.id}">
       <td class="celda-producto">
         <div class="producto-tabla-nombre">
           ${escaparHtml(producto.nombre || "—")}
-        </div>
-        <div class="producto-tabla-slug">
-          Slug: ${escaparHtml(producto.slug || "—")}
         </div>
       </td>
 
@@ -383,10 +402,12 @@ function manejarAccionTabla(evento) {
 async function confirmarCambioEstado() {
   if (!estado.accionPendiente) return;
 
-  try {
-    const { accion, productoId } = estado.accionPendiente;
+  const { accion, productoId } = estado.accionPendiente;
 
+  try {
     elementos.btnConfirmarCambioEstado.disabled = true;
+    elementos.btnConfirmarCambioEstado.textContent =
+      accion === "desactivar" ? "Desactivando..." : "Activando...";
 
     if (accion === "desactivar") {
       await desactivarProducto(productoId);
@@ -396,24 +417,96 @@ async function confirmarCambioEstado() {
       mostrarMensajeExito("Producto activado correctamente.");
     }
 
-    if (modalEstado) {
-      modalEstado.hide();
-    }
-
+    cerrarModalConfirmacionEstado();
     estado.accionPendiente = null;
-    await cargarProductos();
+    await cargarProductos("Actualizando estado...");
   } catch (error) {
-    mostrarMensajeError(error.message);
+    estado.accionPendiente = null;
+    mostrarErrorDespuesDeCerrarModal(error.message);
   } finally {
     elementos.btnConfirmarCambioEstado.disabled = false;
+    elementos.btnConfirmarCambioEstado.textContent =
+      accion === "desactivar" ? "Desactivar" : "Activar";
   }
 }
 
-function construirFilaCargando() {
+function cerrarModalConfirmacionEstado() {
+  if (modalEstado) {
+    modalEstado.hide();
+  }
+}
+
+function modalConfirmacionEstaVisible() {
+  return elementos.modalConfirmacionEstado?.classList.contains("show");
+}
+
+function mostrarErrorDespuesDeCerrarModal(mensaje) {
+  if (!modalEstado || !modalConfirmacionEstaVisible()) {
+    mostrarMensajeError(mensaje);
+    return;
+  }
+
+  elementos.modalConfirmacionEstado.addEventListener(
+    "hidden.bs.modal",
+    () => mostrarMensajeError(mensaje),
+    { once: true }
+  );
+
+  cerrarModalConfirmacionEstado();
+}
+
+function activarCargaTabla(mensaje = "Actualizando productos...") {
+  const tieneFilasReales = elementos.tabla?.querySelector("tr[data-producto-id]");
+
+  if (!tieneFilasReales) {
+    elementos.tabla.innerHTML = construirFilaCargando(mensaje);
+  }
+
+  const textoCarga = elementos.contenedorTabla?.querySelector("[data-texto-carga-tabla]");
+
+  if (textoCarga) {
+    textoCarga.textContent = mensaje;
+  }
+
+  elementos.contenedorTabla?.classList.add("tabla-admin-contenedor-cargando");
+  elementos.contenedorTabla?.querySelector(".tabla-admin-overlay")?.setAttribute("aria-hidden", "false");
+  actualizarControlesCarga(true);
+}
+
+function desactivarCargaTabla() {
+  elementos.contenedorTabla?.classList.remove("tabla-admin-contenedor-cargando");
+  elementos.contenedorTabla?.querySelector(".tabla-admin-overlay")?.setAttribute("aria-hidden", "true");
+  actualizarControlesCarga(false);
+  restaurarEstadoPaginacion();
+}
+
+function restaurarEstadoPaginacion() {
+  elementos.btnPaginaAnterior.disabled = estado.pagina <= 1;
+  elementos.btnPaginaSiguiente.disabled =
+    estado.totalPaginas === 0 || estado.pagina >= estado.totalPaginas;
+}
+
+function actualizarControlesCarga(cargando) {
+  const controles = [
+    elementos.btnRecargar,
+    elementos.btnLimpiarFiltros,
+    elementos.btnPaginaAnterior,
+    elementos.btnPaginaSiguiente,
+    elementos.formFiltros?.querySelector('button[type="submit"]'),
+  ];
+
+  controles.forEach((control) => {
+    if (control) {
+      control.disabled = cargando;
+    }
+  });
+}
+
+function construirFilaCargando(mensaje = "Cargando productos...") {
   return `
     <tr>
       <td colspan="${COLUMNAS_TABLA_PRODUCTOS}" class="text-center py-4 text-muted">
-        Cargando productos...
+        ${escaparHtml(mensaje)}
       </td>
     </tr>
   `;

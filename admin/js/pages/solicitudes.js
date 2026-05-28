@@ -11,7 +11,10 @@ import {
   configurarBotonCerrarSesion,
   iniciarIndicadorSesion,
   finalizarCargaAdmin,
+  usuarioEsAdmin,
 } from "../auth.js";
+
+const ES_ADMIN = usuarioEsAdmin();
 
 let solicitudesOriginales = [];
 let solicitudActual = null;
@@ -69,8 +72,8 @@ async function iniciarPagina() {
 
   try {
     aplicarPermisosVisuales();
-    configurarBotonCerrarSesion();
-    iniciarIndicadorSesion();
+    configurarBotonCerrarSesion("boton-cerrar-sesion");
+    iniciarIndicadorSesion("infoSesionAdmin");
 
     inicializarModales();
     registrarEventos();
@@ -127,7 +130,9 @@ async function cargarSolicitudes() {
 
     const respuesta = await obtenerSolicitudesAdmin(parametros);
 
-    solicitudesOriginales = Array.isArray(respuesta) ? respuesta : [];
+    solicitudesOriginales = Array.isArray(respuesta)
+      ? respuesta.map(normalizarSolicitudDetalle)
+      : [];
 
     actualizarContadores();
     renderizarSolicitudes();
@@ -143,6 +148,15 @@ async function cargarSolicitudes() {
     textoCantidadSolicitudes.textContent = "Error cargando solicitudes.";
     mostrarAlerta(error.message || "No fue posible cargar las solicitudes.");
   }
+}
+
+function normalizarSolicitudDetalle(solicitud) {
+  return {
+    ...solicitud,
+    auditoria_reciente: Array.isArray(solicitud.auditoria_reciente)
+      ? solicitud.auditoria_reciente
+      : [],
+  };
 }
 
 function renderizarSolicitudes() {
@@ -279,7 +293,9 @@ async function manejarAccionesTabla(evento) {
 
 async function abrirDetalleSolicitud(solicitudId) {
   try {
-    const solicitud = await obtenerDetalleSolicitudAdmin(solicitudId);
+    const solicitud = normalizarSolicitudDetalle(
+      await obtenerDetalleSolicitudAdmin(solicitudId)
+    );
 
     solicitudActual = solicitud;
     llenarDetalleSolicitud(solicitud);
@@ -324,6 +340,217 @@ function llenarDetalleSolicitud(solicitud) {
     enlaceWhatsApp.removeAttribute("href");
     enlaceWhatsApp.classList.add("d-none");
   }
+
+  insertarAuditoriaSolicitud(solicitud);
+}
+
+function insertarAuditoriaSolicitud(solicitud) {
+  const bloqueExistente = document.getElementById("bloqueAuditoriaSolicitud");
+
+  if (bloqueExistente) {
+    bloqueExistente.remove();
+  }
+
+  const separador = modalDetalleSolicitudElemento?.querySelector(".modal-body > hr");
+
+  if (!separador) {
+    return;
+  }
+
+  separador.insertAdjacentHTML("afterend", construirAuditoriaSolicitud(solicitud));
+}
+
+function construirAuditoriaSolicitud(solicitud) {
+  const auditoria = Array.isArray(solicitud.auditoria_reciente)
+    ? solicitud.auditoria_reciente
+    : [];
+
+  const cabecera = `
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        ${
+          ES_ADMIN
+            ? `<div><strong>Gestionado por:</strong> ${textoSeguro(solicitud.gestionado_por_admin_nombre)}</div>`
+            : ""
+        }
+        <div><strong>Fecha creación:</strong> ${formatearFechaCompleta(solicitud.creado_en)}</div>
+      </div>
+
+      <div class="col-md-6">
+        <div><strong>Última gestión:</strong> ${formatearFechaCompleta(solicitud.fecha_ultima_gestion || solicitud.actualizado_en)}</div>
+        <div><strong>Estado actual:</strong> ${capitalizarEstado(solicitud.estado)}</div>
+      </div>
+    </div>
+  `;
+
+  const movimientos = auditoria.length
+    ? auditoria.map((registro) => construirBloqueAuditoriaSolicitud(registro)).join("")
+    : '<div class="text-muted">Todavía no hay movimientos de auditoría para esta solicitud.</div>';
+
+  return `
+    <section id="bloqueAuditoriaSolicitud" class="mt-4">
+      <div class="border rounded p-3">
+        <h6 class="mb-3">Auditoría</h6>
+        ${cabecera}
+        <div>
+          <h6 class="mb-3">Movimientos recientes</h6>
+          ${movimientos}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function construirBloqueAuditoriaSolicitud(registro) {
+  const titulo = obtenerTituloAccionAuditoriaSolicitud(registro.accion);
+  const fecha = formatearFechaCompleta(registro.creado_en);
+  const autor = registro.usuario_admin_nombre || "Sistema";
+  const observacion = registro.observacion
+    ? `<div class="small text-muted mb-2">${escaparHtml(registro.observacion)}</div>`
+    : "";
+
+  return `
+    <div class="border rounded p-3 mb-3">
+      <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+        <div><strong>${escaparHtml(titulo)}</strong></div>
+        <div class="small text-muted">${fecha}</div>
+      </div>
+
+      ${
+        ES_ADMIN
+          ? `<div class="small mb-2"><strong>Por:</strong> ${escaparHtml(autor)}</div>`
+          : ""
+      }
+
+      ${observacion}
+
+      ${construirListaCambiosAuditoriaSolicitud(registro)}
+    </div>
+  `;
+}
+
+function obtenerTituloAccionAuditoriaSolicitud(accion) {
+  const mapa = {
+    actualizar: "Actualización",
+    cambiar_estado: "Cambio de estado",
+  };
+
+  return mapa[String(accion || "").toLowerCase()] || String(accion || "Movimiento");
+}
+
+function obtenerEtiquetaCampoAuditoriaSolicitud(clave) {
+  const mapa = {
+    estado: "Estado",
+    nota_interna: "Nota interna",
+    atendida: "Atendida",
+    fecha_contactado: "Fecha contactado",
+    fecha_cotizado: "Fecha cotizado",
+    fecha_cierre: "Fecha cierre",
+    fecha_ultima_gestion: "Última gestión",
+    gestionado_por_admin_id: "Gestionado por",
+  };
+
+  return mapa[clave] || clave;
+}
+
+function formatearValorAuditoriaSolicitud(clave, valor, solicitud = null) {
+  if (clave === "estado") {
+    return capitalizarEstado(valor);
+  }
+
+  if (clave === "atendida") {
+    return valor ? "Sí" : "No";
+  }
+
+  if (clave === "gestionado_por_admin_id") {
+    const nombreGestion = solicitud?.gestionado_por_admin_nombre || "";
+    return nombreGestion ? escaparHtml(nombreGestion) : "—";
+  }
+
+  if (
+    clave === "fecha_contactado" ||
+    clave === "fecha_cotizado" ||
+    clave === "fecha_cierre" ||
+    clave === "fecha_ultima_gestion"
+  ) {
+    return formatearFechaCompleta(valor);
+  }
+
+  if (valor === null || valor === undefined || valor === "") {
+    return "—";
+  }
+
+  return escaparHtml(String(valor));
+}
+
+function debeOcultarCampoAuditoriaSolicitud(clave, valorAnterior, valorNuevo) {
+  if (clave === "atendida") {
+    return true;
+  }
+
+  if (clave === "gestionado_por_admin_id") {
+    return true;
+  }
+
+  if (clave === "fecha_ultima_gestion") {
+    return true;
+  }
+
+  if (valorAnterior === valorNuevo) {
+    return true;
+  }
+
+  return false;
+}
+
+function construirListaCambiosAuditoriaSolicitud(registro) {
+  const anteriores = registro.valores_anteriores || {};
+  const nuevos = registro.valores_nuevos || {};
+  const claves = Object.keys(nuevos);
+
+  const items = claves
+    .map((clave) => {
+      const valorAnterior = anteriores[clave];
+      const valorNuevo = nuevos[clave];
+
+      if (debeOcultarCampoAuditoriaSolicitud(clave, valorAnterior, valorNuevo)) {
+        return "";
+      }
+
+      const valorAnteriorFormateado = formatearValorAuditoriaSolicitud(
+        clave,
+        valorAnterior,
+        solicitudActual
+      );
+
+      const valorNuevoFormateado = formatearValorAuditoriaSolicitud(
+        clave,
+        valorNuevo,
+        solicitudActual
+      );
+
+      if (valorAnteriorFormateado === valorNuevoFormateado) {
+        return "";
+      }
+
+      return `
+        <li>
+          <strong>${escaparHtml(obtenerEtiquetaCampoAuditoriaSolicitud(clave))}:</strong>
+          ${valorAnteriorFormateado} → ${valorNuevoFormateado}
+        </li>
+      `;
+    })
+    .filter(Boolean);
+
+  if (!items.length) {
+    return '<div class="text-muted small">Sin cambios detallados.</div>';
+  }
+
+  return `
+    <ul class="lista-detalle-variante mb-0">
+      ${items.join("")}
+    </ul>
+  `;
 }
 
 async function guardarGestionSolicitud() {
@@ -343,7 +570,9 @@ async function guardarGestionSolicitud() {
       nota_interna: notaInternaSolicitud.value.trim() || null,
     };
 
-    const solicitud = await cambiarEstadoSolicitudAdmin(solicitudId, payload);
+    const solicitud = normalizarSolicitudDetalle(
+      await cambiarEstadoSolicitudAdmin(solicitudId, payload)
+    );
 
     solicitudActual = solicitud;
     llenarDetalleSolicitud(solicitud);
@@ -375,7 +604,9 @@ async function guardarSoloNotaSolicitud() {
       nota_interna: notaInternaSolicitud.value.trim() || null,
     };
 
-    const solicitud = await actualizarSolicitudAdmin(solicitudId, payload);
+    const solicitud = normalizarSolicitudDetalle(
+      await actualizarSolicitudAdmin(solicitudId, payload)
+    );
 
     solicitudActual = solicitud;
     llenarDetalleSolicitud(solicitud);
@@ -416,6 +647,8 @@ function capitalizarEstado(estado) {
     cotizado: "Cotizado",
     cerrado: "Cerrado",
     descartado: "Descartado",
+    true: "Sí",
+    false: "No",
   };
 
   return textos[estado] || "—";
@@ -440,15 +673,27 @@ function construirUrlWhatsApp(solicitud) {
 function formatearFechaCorta(valor) {
   if (!valor) return "—";
 
+  const fecha = new Date(valor);
+
+  if (Number.isNaN(fecha.getTime())) {
+    return "—";
+  }
+
   return new Intl.DateTimeFormat("es-CO", {
     year: "2-digit",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date(valor));
+  }).format(fecha);
 }
 
 function formatearFechaCompleta(valor) {
   if (!valor) return "—";
+
+  const fecha = new Date(valor);
+
+  if (Number.isNaN(fecha.getTime())) {
+    return "—";
+  }
 
   return new Intl.DateTimeFormat("es-CO", {
     year: "numeric",
@@ -456,7 +701,7 @@ function formatearFechaCompleta(valor) {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(valor));
+  }).format(fecha);
 }
 
 function mostrarAlerta(mensaje, tipo = "danger") {
@@ -513,6 +758,14 @@ function normalizarTexto(valor) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
+}
+
+function textoSeguro(valor) {
+  if (valor === null || valor === undefined || valor === "") {
+    return "—";
+  }
+
+  return escaparHtml(valor);
 }
 
 function escaparHtml(valor) {

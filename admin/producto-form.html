@@ -16,7 +16,7 @@
 <body class="bg-light">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
     <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="./inventario.html">
+      <a class="navbar-brand fw-bold" href="./dashboard.html">
         Solo Culatas
       </a>
 
@@ -69,7 +69,11 @@
 
         <div id="infoSesionAdmin" class="info-sesion-admin"></div>
 
-        <button id="btnCerrarSesion" class="btn btn-outline-light btn-sm" type="button">
+        <button
+          id="boton-cerrar-sesion"
+          class="btn btn-outline-light btn-sm"
+          type="button"
+        >
           Cerrar sesión
         </button>
       </div>
@@ -210,7 +214,7 @@
             <div>
               <h2 class="h5 mb-1">Configuraciones</h2>
               <p class="text-muted small mb-0">
-                Diferencias técnicas: inyector, medida, versión, presentación, etc.
+                Diferencias técnicas simples: inyector, medida, versión, presentación, etc.
               </p>
             </div>
 
@@ -283,7 +287,6 @@
                   class="form-control"
                   required
                   maxlength="180"
-                  placeholder=""
                 >
               </div>
 
@@ -299,7 +302,6 @@
                   required
                   maxlength="200"
                   readonly
-                  placeholder=""
                 >
               </div>
 
@@ -318,21 +320,12 @@
                 </select>
               </div>
 
-              <div class="col-12 col-md-6">
-                <label for="tipo_repuesto" class="form-label">
-                  Tipo detectado <span class="text-danger">*</span>
-                </label>
-                <input
-                  id="tipo_repuesto"
-                  name="tipo_repuesto"
-                  type="text"
-                  class="form-control bg-light"
-                  required
-                  maxlength="80"
-                  readonly
-                  placeholder="Se detecta según la categoría"
-                >
-              </div>
+              <input
+                id="tipo_repuesto"
+                name="tipo_repuesto"
+                type="hidden"
+                required
+              >
 
               <div class="col-12 col-md-6">
                 <label for="referencia_original" class="form-label">
@@ -534,7 +527,7 @@
             <div>
               <h2 id="tituloModalConfiguracion" class="modal-title h5">Nueva configuración</h2>
               <small class="text-muted">
-                Usa atributos genéricos para que funcione con cualquier autoparte.
+                Define una diferencia técnica simple para asociarla a variantes.
               </small>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -555,89 +548,72 @@
                   class="form-control"
                   required
                   maxlength="120"
-                  placeholder="Ej: Inyector 21 mm, STD, 0.25, 3/4, Juego x4"
+                  placeholder="Ej: Inyector 21mm"
                 >
+                <div class="campo-ayuda mt-1">
+                  Usa un nombre corto y fácil de reconocer en inventario y variantes.
+                </div>
               </div>
 
-              <div class="col-12 col-md-6">
-                <label for="atributo_principal_nombre" class="form-label">Atributo principal</label>
-                <input
-                  id="atributo_principal_nombre"
-                  name="atributo_principal_nombre"
-                  type="text"
-                  class="form-control"
-                  maxlength="80"
-                  placeholder="Ej: Medida, presentación, inyector"
-                >
-              </div>
+              <input
+                id="atributo_principal_nombre"
+                name="atributo_principal_nombre"
+                type="hidden"
+                value="Detalle técnico"
+              >
 
-              <div class="col-12 col-md-6">
-                <label for="atributo_principal_valor" class="form-label">Valor principal</label>
+              <div class="col-12">
+                <label for="atributo_principal_valor" class="form-label">
+                  Detalle técnico
+                </label>
                 <input
                   id="atributo_principal_valor"
                   name="atributo_principal_valor"
                   type="text"
                   class="form-control"
                   maxlength="120"
-                  placeholder="Ej: STD, 21 mm, 3/4"
+                  placeholder="Ej: Inyector 21mm"
                 >
               </div>
 
-              <div class="col-12 col-md-6">
-                <label for="atributo_secundario_nombre" class="form-label">Atributo secundario</label>
-                <input
-                  id="atributo_secundario_nombre"
-                  name="atributo_secundario_nombre"
-                  type="text"
-                  class="form-control"
-                  maxlength="80"
-                  placeholder="Ej: Puertos"
-                >
-              </div>
+              <input
+                id="atributo_secundario_nombre"
+                name="atributo_secundario_nombre"
+                type="hidden"
+                value=""
+              >
 
-              <div class="col-12 col-md-6">
-                <label for="atributo_secundario_valor" class="form-label">Valor secundario</label>
-                <input
-                  id="atributo_secundario_valor"
-                  name="atributo_secundario_valor"
-                  type="text"
-                  class="form-control"
-                  maxlength="120"
-                  placeholder="Ej: 4"
-                >
-              </div>
+              <input
+                id="atributo_secundario_valor"
+                name="atributo_secundario_valor"
+                type="hidden"
+                value=""
+              >
 
-              <div class="col-12 col-md-6">
-                <label for="atributo_extra_nombre" class="form-label">Atributo extra</label>
-                <input
-                  id="atributo_extra_nombre"
-                  name="atributo_extra_nombre"
-                  type="text"
-                  class="form-control"
-                  maxlength="80"
-                  placeholder="Ej: Versión"
-                >
-              </div>
+              <input
+                id="atributo_extra_nombre"
+                name="atributo_extra_nombre"
+                type="hidden"
+                value=""
+              >
 
-              <div class="col-12 col-md-6">
-                <label for="atributo_extra_valor" class="form-label">Valor extra</label>
-                <input
-                  id="atributo_extra_valor"
-                  name="atributo_extra_valor"
-                  type="text"
-                  class="form-control"
-                  maxlength="120"
-                  placeholder="Ej: Europea"
-                >
-              </div>
+              <input
+                id="atributo_extra_valor"
+                name="atributo_extra_valor"
+                type="hidden"
+                value=""
+              >
 
               <div class="col-12">
-                <label for="configuracion_observaciones" class="form-label">Observaciones</label>
+                <label for="configuracion_observaciones" class="form-label">
+                  Observaciones
+                </label>
                 <textarea
                   id="configuracion_observaciones"
                   name="observaciones"
                   class="form-control"
                   rows="2"
+                  placeholder="Notas internas opcionales"
                 ></textarea>
               </div>
 
@@ -682,7 +658,12 @@
                 Oferta vendible: tipo, precio, stock, marca, SEO, Merchant e imágenes.
               </small>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <button
+              id="btnCerrarModalVariante"
+              type="button"
+              class="btn-close"
+              aria-label="Cerrar"
+            ></button>
           </div>
 
           <div class="modal-body">
@@ -820,7 +801,6 @@
                       class="form-control"
                       required
                       maxlength="150"
-                      placeholder=""
                     >
                   </div>
 
@@ -922,7 +902,7 @@
                     >
                   </div>
 
-                  <div class="col-12 col-md-8">
+                  <div class="col-12">
                     <label for="variante_secundaria" class="form-label">Detalle adicional</label>
                     <input
                       id="variante_secundaria"
@@ -930,17 +910,16 @@
                       type="text"
                       class="form-control"
                       maxlength="100"
+                      placeholder="Ej: Sin Turbo"
                     >
                   </div>
 
-                  <div class="col-12 col-md-4">
-                    <label for="variante_condicion" class="form-label">
-                      Condición <span class="text-danger">*</span>
-                    </label>
-                    <select id="variante_condicion" name="condicion" class="form-select">
-                      <option value="nuevo">Nuevo</option>
-                    </select>
-                  </div>
+                  <input
+                    id="variante_condicion"
+                    name="condicion"
+                    type="hidden"
+                    value="nuevo"
+                  >
 
                   <div class="col-12">
                     <div class="form-check-lineal">
@@ -1105,17 +1084,12 @@
                     ></textarea>
                   </div>
 
-                  <div class="col-12">
-                    <label for="variante_sku" class="form-label">SKU opcional</label>
-                    <input
-                      id="variante_sku"
-                      name="sku"
-                      type="text"
-                      class="form-control"
-                      maxlength="100"
-                      placeholder=""
-                    >
-                  </div>
+                  <input
+                    id="variante_sku"
+                    name="sku"
+                    type="hidden"
+                    value=""
+                  >
                 </div>
               </div>
 
@@ -1214,7 +1188,11 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <button
+              id="btnCancelarModalVariante"
+              type="button"
+              class="btn btn-outline-secondary"
+            >
               Cancelar
             </button>
             <button id="btnGuardarVariante" type="button" class="btn btn-outline-primary">

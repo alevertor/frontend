@@ -1,23 +1,329 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="layout-publico-preparando">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solo Culatas</title>
-    <link rel="stylesheet" href="/frontend/css/style.css">
-    <link rel="stylesheet" href="/frontend/css/variables.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Solo Culatas | Autopartes nuevas para motor en Colombia</title>
+
+  <meta
+    name="description"
+    content="Solo Culatas ofrece autopartes nuevas para motor en Colombia: culatas, turbos, bielas y cigüeñales. Cotiza, verifica compatibilidad y compra con atención digital."
+  />
+
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css?v=botonera-mobile-7" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+  <link rel="stylesheet" href="./assets/css/pages/catalogo.css" />
+  <link rel="stylesheet" href="./assets/css/pages/home.css?v=home-1" />
+  <link rel="stylesheet" href="./assets/css/responsive.css" />
 </head>
+
 <body>
-    <!-- El navbar y footer se cargarán dinámicamente aquí -->
-    <!-- Contenido principal de la página -->
-    <div class="contenido">
-        <!-- Aquí va el contenido específico de la página, por ejemplo: -->
-        <h1>Bienvenido a SOLO CULATAS</h1>
-        <!-- Otros contenidos de la página -->
-    </div>
-    <!-- Incluir el archivo main.js para cargar navbar y footer -->
-    <script src="/frontend/js/main.js"></script>
+  <header id="headerPublico"></header>
+  <div id="navMobilePublico"></div>
+
+  <main id="contenido-principal" class="pagina-home">
+    <section class="home-hero" aria-labelledby="tituloHome">
+      <div class="home-contenedor home-hero-contenido">
+        <div class="home-hero-texto">
+          <p class="home-etiqueta">Autopartes nuevas para motor</p>
+
+          <h1 id="tituloHome">
+            Bienvenido a Solo Culatas
+          </h1>
+
+          <p class="home-hero-descripcion">
+            Somos una empresa especializada en autopartes nuevas para motor, con enfoque en culatas,
+            turbos, bielas y cigüeñales para vehículos a gasolina y diésel.
+          </p>
+
+          <p class="home-hero-descripcion">
+            Una tienda online 100% digital en Colombia, diseñada para ayudarte a verificar la compatibilidad
+            por vehículo y motor antes de comprar.
+          </p>
+
+          <div class="home-hero-acciones">
+            <a class="home-boton home-boton-principal" href="./pages/catalogo.html">
+              Ver productos
+            </a>
+
+            <a class="home-boton home-boton-secundario" href="./pages/contacto.html">
+              Solicitar asesoría
+            </a>
+          </div>
+        </div>
+
+        <div class="home-hero-visual" aria-hidden="true">
+        </div>
+      </div>
+    </section>
+
+    <section class="home-seccion home-categorias" aria-labelledby="tituloCategorias">
+      <div class="home-contenedor">
+        <header class="home-seccion-cabecera">
+          <h2 id="tituloCategorias">Nuestras categorías</h2>
+          <p>
+            Encuentra piezas 100% nuevas y garantizadas.
+          </p>
+        </header>
+
+        <div class="home-categorias-grid">
+          <a class="home-categoria-card" href="./pages/catalogo.html?categoria=culatas">
+            <img
+              class="home-categoria-imagen"
+              src="./img/categories/categorias.png"
+              alt=""
+              loading="lazy"
+            />
+            <span class="home-categoria-nombre">Culatas</span>
+          </a>
+
+          <a class="home-categoria-card" href="./pages/catalogo.html?categoria=culatas">
+            <img
+              class="home-categoria-imagen"
+              src="./img/categories/categorias.png"
+              alt=""
+              loading="lazy"
+            />
+            <span class="home-categoria-nombre">Turbos</span>
+          </a>
+
+          <a class="home-categoria-card" href="./pages/catalogo.html?categoria=culatas">
+            <img
+              class="home-categoria-imagen"
+              src="./img/categories/categorias.png"
+              alt=""
+              loading="lazy"
+            />
+            <span class="home-categoria-nombre">Bielas</span>
+          </a>
+
+          <a class="home-categoria-card" href="./pages/catalogo.html?categoria=culatas">
+            <img
+              class="home-categoria-imagen"
+              src="./img/categories/categorias.png"
+              alt=""
+              loading="lazy"
+            />
+            <span class="home-categoria-nombre">Cigueñales</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-seccion home-destacados" aria-labelledby="tituloDestacados">
+      <div class="home-contenedor">
+        <header class="home-seccion-cabecera">
+          <h2 id="tituloDestacados">Productos destacados</h2>
+          <p>
+            Algunas referencias disponibles para consulta y compra.
+          </p>
+        </header>
+
+        <div id="homeProductosEstado" class="home-productos-estado">
+          Cargando productos destacados...
+        </div>
+
+        <div
+          id="homeProductosGrid"
+          class="productos-grid home-productos-grid"
+          hidden
+        ></div>
+      </div>
+    </section>
+
+    <section class="home-seccion home-marcas" aria-labelledby="tituloMarcas">
+      <div class="home-contenedor">
+        <header class="home-seccion-cabecera">
+          <h2 id="tituloMarcas">Autopartes para todas las marcas</h2>
+          <p>
+            Trabajamos aplicaciones para vehículos japoneses, coreanos, chinos, europeos y americanos.
+          </p>
+        </header>
+
+        <div class="home-marcas-grid">
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=chevrolet">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Chevrolet</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=renault">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Renault</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=mazda">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Mazda</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=hyundai">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Hyundai</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=kia">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Kia</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=ford">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Ford</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=nissan">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Nissan</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=toyota">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Toyota</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=mitsubishi">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Mitsubishi</span>
+          </a>
+
+          <a class="home-marca-card" href="./pages/catalogo.html?marca=suzuki">
+            <img
+              class="home-marca-imagen"
+              src="./img/brands/marcas.png"
+              alt=""
+              loading="lazy"
+            />
+            <span>Suzuki</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-seccion home-confianza" aria-labelledby="tituloConfianza">
+      <div class="home-contenedor">
+        <header class="home-seccion-cabecera">
+          <h2 id="tituloConfianza">Compra con confianza</h2>
+          <p>
+            Atención personalizada y productos con garantía para que compres la pieza correcta.
+          </p>
+        </header>
+
+        <div class="home-confianza-grid">
+          <article class="home-confianza-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M7.2 4.5h9.6c.46 0 .9.22 1.18.59l2.55 3.36c.42.55.4 1.31-.06 1.84l-7.33 8.54a1.5 1.5 0 0 1-2.28 0L3.53 10.29a1.5 1.5 0 0 1-.06-1.84l2.55-3.36c.28-.37.72-.59 1.18-.59Zm.08 1.5-2.26 2.98h3.86L9.9 6H7.28Zm4.2 0-1.02 2.98h3.08L12.52 6h-1.04Zm2.62 0 1.02 2.98h3.86L16.72 6H14.1ZM5.08 10.48l5.14 5.99-1.36-5.99H5.08Zm5.32 0L12 17.52l1.6-7.04h-3.2Zm4.74 0-1.36 5.99 5.14-5.99h-3.78Z"
+              />
+            </svg>
+            <h3>Productos nuevos</h3>
+            <p>Autopartes 100% nuevas con garantía.</p>
+          </article>
+
+          <article class="home-confianza-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M10.75 3.5a7.25 7.25 0 0 1 5.76 11.66l3.16 3.16a.95.95 0 0 1-1.34 1.35l-3.16-3.17A7.25 7.25 0 1 1 10.75 3.5Zm0 1.5a5.75 5.75 0 1 0 0 11.5 5.75 5.75 0 0 0 0-11.5Zm2.77 3.48a.75.75 0 0 1 0 1.06l-3.2 3.2a.75.75 0 0 1-1.06 0l-1.33-1.33a.75.75 0 0 1 1.06-1.06l.8.8 2.67-2.67a.75.75 0 0 1 1.06 0Z"
+              />
+            </svg>
+            <h3>Compatibilidad verificada</h3>
+            <p>Te ayudamos a confirmar que aplique a tu vehículo.</p>
+          </article>
+
+          <article class="home-confianza-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M4.75 5A2.75 2.75 0 0 0 2 7.75v5.5A2.75 2.75 0 0 0 4.75 16H6v2.25a.75.75 0 0 0 1.18.61L11.27 16h7.98A2.75 2.75 0 0 0 22 13.25v-5.5A2.75 2.75 0 0 0 19.25 5H4.75Zm0 1.5h14.5c.69 0 1.25.56 1.25 1.25v5.5c0 .69-.56 1.25-1.25 1.25h-8.22a.75.75 0 0 0-.43.14L7.5 16.82V15.25a.75.75 0 0 0-.75-.75h-2A1.25 1.25 0 0 1 3.5 13.25v-5.5c0-.69.56-1.25 1.25-1.25Z"
+              />
+            </svg>
+            <h3>Atención digital</h3>
+            <p>Cotización rápida y acompañamiento durante el proceso.</p>
+          </article>
+
+          <article class="home-confianza-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M3.5 6.25A1.75 1.75 0 0 1 5.25 4.5h8.5a1.75 1.75 0 0 1 1.75 1.75V8h1.78c.58 0 1.12.29 1.44.77l1.78 2.67c.2.29.3.64.3.99v3.32a1.75 1.75 0 0 1-1.75 1.75h-.56a2.75 2.75 0 0 1-5.38 0H9.9a2.75 2.75 0 0 1-5.38 0H3.75A1.75 1.75 0 0 1 2 15.75v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .14.11.25.25.25h.77a2.75 2.75 0 0 1 5.38 0H14V6.25a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25v1h5.25a.75.75 0 0 1 0 1.5H3.25a.75.75 0 0 1 0-1.5h.25v-1Zm12 3.25V16h.86a2.75 2.75 0 0 1 2.94-.93v-2.64a.25.25 0 0 0-.04-.14L17.48 9.62a.25.25 0 0 0-.2-.12H15.5ZM7.2 15.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm9.85 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"
+              />
+            </svg>
+            <h3>Envíos a nivel Nacional</h3>
+            <p>Despachos a diferentes ciudades, según disponibilidad y destino.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-cta" aria-labelledby="tituloCtaHome">
+      <div class="home-contenedor">
+        <div class="home-cta-contenido">
+          <div>
+            <h2 id="tituloCtaHome">¿No encuentras tu referencia?</h2>
+            <p>
+              Envíanos datos del motor, vehículo o referencia OEM y revisamos disponibilidad.
+            </p>
+          </div>
+
+          <a class="home-boton home-boton-secundario" href="./pages/contacto.html">
+            Contacto
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footerPublico"></footer>
+
+  <script type="module" src="./assets/js/layout.js?v=botonera-mobile-7"></script>
+  <script type="module" src="./assets/js/pages/home.js?v=home-1"></script>
 </body>
 </html>
-
-<!-- En el Frontend no hay mucho, el codigo actual esta incompleto -->

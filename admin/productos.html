@@ -16,7 +16,7 @@
 <body class="bg-light">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
     <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="./inventario.html">
+      <a class="navbar-brand fw-bold" href="./dashboard.html">
         Solo Culatas
       </a>
 
@@ -68,7 +68,11 @@
 
         <div id="infoSesionAdmin" class="info-sesion-admin"></div>
 
-        <button id="btnCerrarSesion" class="btn btn-outline-light btn-sm" type="button">
+        <button
+          id="boton-cerrar-sesion"
+          class="btn btn-outline-light btn-sm"
+          type="button"
+        >
           Cerrar sesión
         </button>
       </div>
@@ -133,6 +137,12 @@
               Filtrar
             </button>
           </div>
+
+          <div class="col-12 col-lg-2 d-grid">
+            <button id="btnLimpiarFiltrosProductos" class="btn btn-outline-secondary" type="button">
+              Limpiar filtros
+            </button>
+          </div>
         </form>
       </div>
     </section>
@@ -149,8 +159,9 @@
         </button>
       </div>
 
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 tabla-productos-admin">
+      <div id="contenedorTablaProductos" class="tabla-admin-contenedor">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 tabla-productos-admin">
           <thead>
             <tr>
               <th class="col-producto">Producto</th>
@@ -170,7 +181,15 @@
               </td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
+
+        <div class="tabla-admin-overlay" aria-live="polite" aria-hidden="true">
+          <div class="tabla-admin-overlay-contenido">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <span data-texto-carga-tabla>Actualizando productos...</span>
+          </div>
+        </div>
       </div>
 
       <div class="card-footer bg-white d-flex flex-column flex-md-row justify-content-between gap-2">

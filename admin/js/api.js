@@ -159,6 +159,11 @@ export async function obtenerMarcasPublicas() {
 }
 
 
+export async function obtenerResumenDashboard() {
+  return obtenerJson("/admin/dashboard/resumen");
+}
+
+
 export async function obtenerInventarioVariantes(parametros = {}) {
   return obtenerJson("/admin/variantes", parametros);
 }

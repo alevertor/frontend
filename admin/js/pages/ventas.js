@@ -11,6 +11,7 @@ import {
   aplicarPermisosVisuales,
   usuarioEsAdmin,
   iniciarIndicadorSesion,
+  finalizarCargaAdmin,
 } from "../auth.js";
 
 const ES_ADMIN = usuarioEsAdmin();
@@ -66,14 +67,24 @@ const contenedorToast = document.getElementById("contenedorToast");
 document.addEventListener("DOMContentLoaded", iniciarPagina);
 
 async function iniciarPagina() {
-  if (!protegerPaginaAdmin()) return;
+  if (!protegerPaginaAdmin()) {
+    finalizarCargaAdmin();
+    return;
+  }
 
-  aplicarPermisosVisuales();
-  configurarBotonCerrarSesion("btnCerrarSesion");
-  iniciarIndicadorSesion("infoSesionAdmin");
+  try {
+    aplicarPermisosVisuales();
+    configurarBotonCerrarSesion("boton-cerrar-sesion");
+    iniciarIndicadorSesion("infoSesionAdmin");
 
-  registrarEventos();
-  await cargarVentas();
+    registrarEventos();
+    await cargarVentas();
+  } catch (error) {
+    console.error("Error iniciando ventas:", error);
+    mostrarToast("No fue posible cargar las ventas.", "danger");
+  } finally {
+    finalizarCargaAdmin();
+  }
 }
 
 function registrarEventos() {
@@ -129,6 +140,7 @@ async function cargarVentas() {
           return normalizarVentaDetalle({
             ...venta,
             items: [],
+            auditoria_reciente: [],
           });
         }
       })
@@ -153,12 +165,14 @@ function normalizarVentaDetalle(venta) {
   const items = Array.isArray(venta.items) ? venta.items : [];
   const total = calcularTotalVenta(items);
   const cantidadItems = items.reduce((acumulado, item) => acumulado + Number(item.cantidad || 0), 0);
+  const auditoria_reciente = Array.isArray(venta.auditoria_reciente) ? venta.auditoria_reciente : [];
 
   return {
     ...venta,
     items,
     total,
     cantidadItems,
+    auditoria_reciente,
   };
 }
 
@@ -458,6 +472,8 @@ function construirDetalleVentaHtml(venta) {
         : ""
     }
 
+    ${construirAuditoriaVenta(venta)}
+
     <section class="detalle-venta-items">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
         <div>
@@ -589,6 +605,178 @@ function construirTipoOfertaItem(item) {
   }
 
   return partes.join(" · ");
+}
+
+function construirAuditoriaVenta(venta) {
+  const auditoria = Array.isArray(venta.auditoria_reciente) ? venta.auditoria_reciente : [];
+
+  const bloqueCabecera = `
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        ${
+          ES_ADMIN
+            ? `<div><strong>Creada por:</strong> ${textoSeguro(venta.creado_por_admin_nombre)}</div>`
+            : ""
+        }
+        <div><strong>Fecha creación:</strong> ${formatearFechaCompleta(venta.creado_en)}</div>
+      </div>
+
+      <div class="col-md-6">
+        ${
+          ES_ADMIN && venta.anulado_por_admin_nombre
+            ? `<div><strong>Anulada por:</strong> ${textoSeguro(venta.anulado_por_admin_nombre)}</div>`
+            : ""
+        }
+        <div><strong>Última modificación:</strong> ${formatearFechaCompleta(venta.actualizado_en)}</div>
+      </div>
+    </div>
+  `;
+
+  const movimientos = auditoria.length
+    ? auditoria.map((registro) => construirBloqueAuditoriaVenta(registro)).join("")
+    : '<div class="text-muted">Todavía no hay movimientos de auditoría para esta venta.</div>';
+
+  return `
+    <section class="mb-4">
+      <div class="border rounded p-3">
+        <h6 class="mb-3">Auditoría</h6>
+        ${bloqueCabecera}
+        <div>
+          <h6 class="mb-3">Movimientos recientes</h6>
+          ${movimientos}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function construirBloqueAuditoriaVenta(registro) {
+  const titulo = obtenerTituloAccionAuditoriaVenta(registro.accion);
+  const fecha = formatearFechaCompleta(registro.creado_en);
+  const autor = registro.usuario_admin_nombre || "Sistema";
+  const observacion = registro.observacion
+    ? `<div class="small text-muted mb-2">${escaparHtml(registro.observacion)}</div>`
+    : "";
+
+  return `
+    <div class="border rounded p-3 mb-3">
+      <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+        <div><strong>${escaparHtml(titulo)}</strong></div>
+        <div class="small text-muted">${fecha}</div>
+      </div>
+
+      ${
+        ES_ADMIN
+          ? `<div class="small mb-2"><strong>Por:</strong> ${escaparHtml(autor)}</div>`
+          : ""
+      }
+
+      ${observacion}
+
+      ${construirListaCambiosAuditoriaVenta(registro)}
+    </div>
+  `;
+}
+
+function obtenerTituloAccionAuditoriaVenta(accion) {
+  const mapa = {
+    crear: "Creación",
+    actualizar: "Actualización",
+    anular: "Anulación",
+  };
+
+  return mapa[String(accion || "").toLowerCase()] || String(accion || "Movimiento");
+}
+
+function obtenerEtiquetaCampoAuditoriaVenta(clave) {
+  const mapa = {
+    fecha_venta: "Fecha venta",
+    cliente_nombre: "Cliente",
+    cliente_nit: "NIT / Documento",
+    factura_numero: "Factura",
+    observaciones: "Nota",
+    estado: "Estado",
+    motivo_anulacion: "Motivo anulación",
+    fecha_anulacion: "Fecha anulación",
+  };
+
+  return mapa[clave] || clave;
+}
+
+function formatearValorAuditoriaVenta(clave, valor) {
+  if (clave === "estado") {
+    if (valor === "registrada") return "Registrada";
+    if (valor === "anulada") return "Anulada";
+  }
+
+  if (clave === "fecha_venta" || clave === "fecha_anulacion") {
+    return formatearFechaCompleta(valor);
+  }
+
+  if (valor === null || valor === undefined || valor === "") {
+    return "—";
+  }
+
+  return escaparHtml(String(valor));
+}
+
+function debeOcultarCampoAuditoriaVenta(clave, valorNuevo, registro) {
+  if (!ES_ADMIN && clave === "motivo_anulacion" && !valorNuevo) {
+    return true;
+  }
+
+  if (String(registro?.accion || "").toLowerCase() === "crear") {
+    if (clave === "estado" && valorNuevo === "registrada") {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+function construirListaCambiosAuditoriaVenta(registro) {
+  const anteriores = registro.valores_anteriores || {};
+  const nuevos = registro.valores_nuevos || {};
+  const claves = Object.keys(nuevos);
+
+  const esCreacion = String(registro.accion || "").toLowerCase() === "crear";
+
+  const items = claves
+    .map((clave) => {
+      const valorAnterior = anteriores[clave];
+      const valorNuevo = nuevos[clave];
+
+      if (debeOcultarCampoAuditoriaVenta(clave, valorNuevo, registro)) {
+        return "";
+      }
+
+      if (esCreacion) {
+        return `
+          <li>
+            <strong>${escaparHtml(obtenerEtiquetaCampoAuditoriaVenta(clave))}:</strong>
+            ${formatearValorAuditoriaVenta(clave, valorNuevo)}
+          </li>
+        `;
+      }
+
+      return `
+        <li>
+          <strong>${escaparHtml(obtenerEtiquetaCampoAuditoriaVenta(clave))}:</strong>
+          ${formatearValorAuditoriaVenta(clave, valorAnterior)} → ${formatearValorAuditoriaVenta(clave, valorNuevo)}
+        </li>
+      `;
+    })
+    .filter(Boolean);
+
+  if (!items.length) {
+    return '<div class="text-muted small">Sin cambios detallados.</div>';
+  }
+
+  return `
+    <ul class="lista-detalle-variante mb-0">
+      ${items.join("")}
+    </ul>
+  `;
 }
 
 async function abrirModalEditar(ventaId) {

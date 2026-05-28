@@ -70,23 +70,26 @@ export function protegerSoloAdmin() {
 
 export function aplicarPermisosVisuales() {
   if (usuarioEsAdmin()) {
-    finalizarCargaAdmin();
     return;
   }
 
   document.querySelectorAll("[data-solo-admin]").forEach((elemento) => {
     elemento.classList.add("d-none");
   });
-
-  finalizarCargaAdmin();
 }
 
 export function finalizarCargaAdmin() {
-  document.documentElement.classList.remove("admin-cargando");
+  window.requestAnimationFrame(() => {
+    document.documentElement.classList.remove("admin-cargando");
+    document.documentElement.classList.add("admin-listo");
+  });
 }
 
-export function configurarBotonCerrarSesion(idBoton = "btnCerrarSesion") {
-  const boton = document.getElementById(idBoton);
+export function configurarBotonCerrarSesion(idBoton = "boton-cerrar-sesion") {
+  const boton =
+    document.getElementById(idBoton) ||
+    document.getElementById("boton-cerrar-sesion") ||
+    document.getElementById("btnCerrarSesion");
 
   boton?.addEventListener("click", cerrarSesion);
 }
@@ -107,6 +110,7 @@ export function obtenerPayloadToken() {
 
     const base64Url = partes[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+
     const json = decodeURIComponent(
       atob(base64)
         .split("")
@@ -178,7 +182,11 @@ export function actualizarInfoSesion(idContenedor = "infoSesionAdmin") {
   }
 
   const usuario = obtenerUsuarioActual();
-  const nombre = usuario.nombre || localStorage.getItem("usuario_nombre") || "Usuario";
+  const nombre =
+    usuario.nombre ||
+    localStorage.getItem("usuario_nombre") ||
+    "Usuario";
+
   const rol = obtenerRolUsuario() || "usuario";
   const segundosRestantes = obtenerSegundosRestantesSesion();
 
@@ -187,9 +195,20 @@ export function actualizarInfoSesion(idContenedor = "infoSesionAdmin") {
     return;
   }
 
+  contenedor.classList.add("info-sesion-admin");
+
   contenedor.innerHTML = `
-    <div>Usuario: <strong>${escaparHtml(nombre)}</strong></div>
-    <div>Rol: ${escaparHtml(rol)} · Expira en: ${escaparHtml(formatearTiempoSesion(segundosRestantes))}</div>
+    <span class="info-sesion-linea">
+      Usuario: <strong>${escaparHtml(nombre)}</strong>
+    </span>
+    <span class="info-sesion-separador" aria-hidden="true">·</span>
+    <span class="info-sesion-linea">
+      Rol: <strong>${escaparHtml(rol)}</strong>
+    </span>
+    <span class="info-sesion-separador" aria-hidden="true">·</span>
+    <span class="info-sesion-linea">
+      Expira en: <strong>${escaparHtml(formatearTiempoSesion(segundosRestantes))}</strong>
+    </span>
   `;
 }
 
@@ -208,4 +227,74 @@ function escaparHtml(valor) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+document.addEventListener("click", (evento) => {
+  const enlace = evento.target.closest("a[href]");
+
+  if (!enlace || !debeAplicarTransicionAdmin(enlace, evento)) {
+    return;
+  }
+
+  evento.preventDefault();
+
+  document.documentElement.classList.add("admin-saliendo");
+
+  window.setTimeout(() => {
+    window.location.href = enlace.href;
+  }, 140);
+});
+
+function debeAplicarTransicionAdmin(enlace, evento) {
+  if (
+    evento.defaultPrevented ||
+    evento.button !== 0 ||
+    evento.metaKey ||
+    evento.ctrlKey ||
+    evento.shiftKey ||
+    evento.altKey
+  ) {
+    return false;
+  }
+
+  const destino = enlace.getAttribute("href") || "";
+
+  if (
+    !destino ||
+    destino.startsWith("#") ||
+    destino.startsWith("mailto:") ||
+    destino.startsWith("tel:")
+  ) {
+    return false;
+  }
+
+  if (enlace.target && enlace.target !== "_self") {
+    return false;
+  }
+
+  if (
+    enlace.hasAttribute("data-bs-toggle") ||
+    enlace.closest(".modal") ||
+    enlace.closest("[data-bs-toggle]")
+  ) {
+    return false;
+  }
+
+  let urlDestino;
+
+  try {
+    urlDestino = new URL(enlace.href, window.location.href);
+  } catch {
+    return false;
+  }
+
+  if (urlDestino.origin !== window.location.origin) {
+    return false;
+  }
+
+  if (urlDestino.href === window.location.href) {
+    return false;
+  }
+
+  return true;
 }

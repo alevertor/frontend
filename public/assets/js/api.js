@@ -70,6 +70,34 @@ export async function obtenerCategoriasPublicas() {
   return obtenerJsonPublico("/public/categorias");
 }
 
+export async function obtenerMarcasPublicas() {
+  return obtenerJsonPublico("/public/marcas");
+}
+
+export async function obtenerProductosPublicos({
+  busqueda = "",
+  categoriaId = null,
+  marcaId = null,
+  pagina = 1,
+  tamano = 12,
+} = {}) {
+  return obtenerJsonPublico("/public/productos", {
+    q: busqueda,
+    categoria_id: categoriaId,
+    marca_id: marcaId,
+    pagina,
+    tamano,
+  });
+}
+
+export async function obtenerProductoPublicoPorSlug(slug) {
+  if (!slug) {
+    throw new Error("No se recibió el identificador del producto.");
+  }
+
+  return obtenerJsonPublico(`/public/productos/${encodeURIComponent(slug)}`);
+}
+
 export async function crearSolicitudPublica(payload) {
   return enviarJsonPublico("/public/solicitudes", "POST", payload);
 }
