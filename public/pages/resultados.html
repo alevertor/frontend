@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" class="layout-publico-preparando">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Resultados de búsqueda | Solo Culatas</title>
+
+  <meta
+    name="description"
+    content="Resultados de búsqueda de autopartes nuevas para motor en Solo Culatas. Encuentra culatas, cigüeñales, turbos y otros repuestos."
+  />
+
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css?v=botonera-mobile-1" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/pages/catalogo.css" />
+  <link rel="stylesheet" href="../assets/css/pages/resultados.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+</head>
+
+<body>
+  <header id="headerPublico"></header>
+  <div id="navMobilePublico"></div>
+
+  <main id="contenido-principal" class="pagina-resultados">
+    <section class="resultados-encabezado" aria-labelledby="titulo-resultados-busqueda">
+      <div class="catalogo-contenedor">
+        <nav class="catalogo-migas" aria-label="Ruta de navegación">
+          <a href="../index.html">Inicio</a>
+          <span>/</span>
+          <span>Resultados</span>
+        </nav>
+
+        <h1 id="titulo-resultados-busqueda">Resultados de búsqueda</h1>
+
+        <p id="texto-busqueda" class="resultados-descripcion">
+          Busca por motor, vehículo, referencia OEM, producto o marca.
+        </p>
+      </div>
+    </section>
+
+    <section class="resultados-contenido">
+      <div class="catalogo-contenedor">
+        <div class="resultados-barra">
+          <p id="texto-resultados" class="catalogo-total">Cargando resultados...</p>
+        </div>
+
+        <div id="catalogo-estado" class="catalogo-estado" hidden></div>
+
+        <div
+          id="catalogo-grid"
+          class="catalogo-grid"
+          aria-live="polite"
+        ></div>
+
+        <nav
+          id="catalogo-paginacion"
+          class="catalogo-paginacion"
+          aria-label="Paginación de resultados"
+        ></nav>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footerPublico"></footer>
+
+  <script type="module" src="../assets/js/layout.js?v=botonera-mobile-7"></script>
+  <script type="module" src="../assets/js/pages/resultados.js"></script>
+</body>
+</html>
